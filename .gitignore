@@ -1,0 +1,12 @@
+# QtCreator files
+*.pro.user*
+CMakeLists.txt.user*
+
+# KDevelop files
+*.kdev4
+
+# Sublime text workspace file
+*.sublime-workspace
+
+# Build dir
+build/*
