@@ -1,6 +1,6 @@
-cmake_minimum_required(VERSION 2.8)
+cmake_minimum_required(VERSION 3.1.0)
 
-project(BpTest)
+project(ClossANN)
 
 include(cmake/Utilities.cmake)
 include(cmake/FindOpenANN.cmake)
@@ -19,6 +19,8 @@ if(NOT EIGEN3_FOUND)
                         "install it with CMake.")
 endif()
 
+include_directories(. ${OPENANN_INCLUDE_DIRS} ${EIGEN3_INCLUDE_DIRS})
+set(CLOSS_LINK_LIB openann)
 
 # Ensure out-of-source build
 if(${CMAKE_SOURCE_DIR} STREQUAL ${CMAKE_BINARY_DIR})
@@ -30,8 +32,12 @@ if(NOT CMAKE_BUILD_TYPE)
     set(CMAKE_BUILD_TYPE "Debug")
 endif()
 
+# Use C++11 standard
+set(CMAKE_CXX_STANDARD 11)
+set(CMAKE_CXX_STANDARD_REQUIRED ON)
+
 # Set compiler flags
-set(MY_COMPILER_FLAGS)
+set(CLOSS_COMPILER_FLAGS)
 if(${CMAKE_BUILD_TYPE} STREQUAL Debug)
   message(STATUS "Debug configuration")
   if(CMAKE_COMPILER_IS_GNUCXX)
@@ -58,9 +64,9 @@ if(CMAKE_COMPILER_IS_GNUCXX)
   set(COMPILER_WARNING_FLAGS "-Wall -Wextra -pedantic -Wno-long-long -Wno-enum-compare")
 endif()
 
-include_directories(. ${OPENANN_INCLUDE_DIRS} ${EIGEN3_INCLUDE_DIRS})
 
 add_subdirectory(src)
+add_subdirectory(app)
 
 #option(EXCLUDE_TESTS_FROM_ALL "Exclude test suite from standard target." ON)
 #if(EXCLUDE_TESTS_FROM_ALL)
