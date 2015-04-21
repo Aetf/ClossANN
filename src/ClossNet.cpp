@@ -244,52 +244,73 @@ ClossNet& ClossNet::setKernelSize(double kernel)
 
 double ClossNet::error(unsigned int n)
 {
-    tempInput = trainSet->getInstance(n).transpose();
-    forwardPropagate(nullptr);
-
-    return clossFunction(tempOutput - trainSet->getTarget(n).transpose());
+    std::vector<int> vec;
+    vec.push_back(n);
+    return error(vec.begin(), vec.end()).mean();
 }
 
-template<typename Derived>
-double ClossNet::clossFunction(const Eigen::MatrixBase<Derived> &YmT)
+Eigen::VectorXd ClossNet::error(std::vector<int>::const_iterator startN,
+                       std::vector<int>::const_iterator endN)
 {
-    double tmp = -2 * kernelSize * kernelSize;
-    double beta = 1 / (1 - exp(1/tmp));
-    double rbf = (YmT.array().square() / tmp).exp().sum() / (double) YmT.size();
-    double err = beta * (1 - rbf);
-    return err;
-
-}
-
-double ClossNet::error()
-{
-    double e = 0.0;
-    for(int n = 0; n < N; n++)
-        e += error(n) / (double) N;
-    return e;
-}
-
-void ClossNet::errorGradient(std::vector<int>::const_iterator startN,
-                             std::vector<int>::const_iterator endN,
-                             double& value, Eigen::VectorXd& grad)
-{
-    const int N = endN - startN;
-    tempInput.conservativeResize(N, trainSet->inputs());
-    Eigen::MatrixXd T(N, trainSet->outputs());
+    const int nPatterns = endN - startN;
+    tempInput.conservativeResize(nPatterns, trainSet->inputs());
+    Eigen::MatrixXd T(nPatterns, trainSet->outputs());
     int n = 0;
     for(std::vector<int>::const_iterator it = startN; it != endN; ++it, ++n)
     {
         tempInput.row(n) = trainSet->getInstance(*it);
         T.row(n) = trainSet->getTarget(*it);
     }
-
-    value = 0;
-    forwardPropagate(&value);
+    forwardPropagate(nullptr);
     tempError = tempOutput - T;
-    value += clossFunction(tempError);
-    backpropagate();
+    return clossFunction(tempError);
+}
 
+template<typename Derived>
+Eigen::VectorXd ClossNet::clossFunction(const Eigen::MatrixBase<Derived> &YmT)
+{
+    double tmp = -2 * kernelSize * kernelSize;
+    double beta = 1 / (1 - exp(1/tmp));
+    Eigen::MatrixXd rbf = (YmT.array().square() / tmp).exp();
+
+    Eigen::VectorXd vecRBF = rbf.rowwise().mean();
+    auto err = beta * (1 - vecRBF.array());
+    return err;
+}
+
+double ClossNet::error()
+{
+    std::vector<int> vec;
+    for(int n = 0; n < N; n++)
+        vec.push_back(n);
+    return error(vec.begin(), vec.end()).mean();
+}
+
+bool ClossNet::providesGradient()
+{
+    return true;
+}
+
+void ClossNet::errorGradient(std::vector<int>::const_iterator startN,
+                             std::vector<int>::const_iterator endN,
+                             double& value, Eigen::VectorXd& grad)
+{
+    int nPatterns = endN - startN;
+    value = error(startN, endN).mean();
+
+    backpropagate();
     for(int p = 0; p < P; p++)
         grad(p) = *derivatives[p];
-    grad /= N;
+    grad /= nPatterns;
+}
+
+void ClossNet::finishedIteration()
+{
+    Net::finishedIteration();
+    if (false) {
+        OPENANN_DEBUG << "Current Parameter";
+        std::ostringstream oss;
+        save(oss);
+        OPENANN_DEBUG << oss.str() << std::endl;
+    }
 }

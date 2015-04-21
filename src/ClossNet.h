@@ -102,15 +102,19 @@ public:
     ///@{
     virtual double error(unsigned int n);
     virtual double error();
+    virtual bool providesGradient();
     virtual void errorGradient(std::vector<int>::const_iterator startN,
                                std::vector<int>::const_iterator endN,
                                double& value, Eigen::VectorXd& grad);
+    virtual void finishedIteration();
     ///@}
 
 protected:
 
     template<typename Derived>
-    double clossFunction(const Eigen::MatrixBase<Derived>& ymt);
+    Eigen::VectorXd clossFunction(const Eigen::MatrixBase<Derived>& ymt);
+    Eigen::VectorXd error(std::vector<int>::const_iterator startN,
+                          std::vector<int>::const_iterator endN);
 };
 
 
