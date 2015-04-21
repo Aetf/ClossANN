@@ -19,7 +19,7 @@ if(NOT EIGEN3_FOUND)
                         "install it with CMake.")
 endif()
 
-include_directories(. ${OPENANN_INCLUDE_DIRS} ${EIGEN3_INCLUDE_DIRS})
+include_directories(src ${OPENANN_INCLUDE_DIRS} ${EIGEN3_INCLUDE_DIRS})
 set(CLOSS_LINK_LIB openann)
 
 # Ensure out-of-source build

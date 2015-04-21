@@ -5,6 +5,8 @@
 #include <Eigen/Core>
 #include <iostream>
 
+#include "ClossNet.h"
+
 using namespace OpenANN;
 
 int main()
@@ -30,7 +32,7 @@ int main()
   RandomNumberGenerator().seed(0);
 
   // Create network
-  Net net;
+  ClossNet net;
   // Add an input layer with nI inputs, 1 hidden layer with 2 nodes and an
   // output layer with nO outputs. Use logistic activation function in hidden
   // layer and output layer.
