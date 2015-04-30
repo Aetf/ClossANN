@@ -25,14 +25,16 @@ TwoSpiralsVisualization::TwoSpiralsVisualization(
     //.extremeLayer(1500, RECTIFIER, 1.0)
     .fullyConnectedLayer(20, TANH)
     .fullyConnectedLayer(20, TANH)
+//    net->bpLayer(20, TANH)
+//    .bpLayer(20, TANH)
     .outputLayer(trainingSet.outputs(), TANH)
     .trainingSet(trainingSet);
     net->initialize();
 
     // set stop criteria
     stop.maximalIterations = 10000;
-//    stop.minimalSearchSpaceStep = 1e-10;
-//    stop.minimalValueDifferences = 1e-10;
+    stop.minimalSearchSpaceStep = 1e-10;
+    stop.minimalValueDifferences = 1e-10;
 }
 
 TwoSpiralsVisualization::~TwoSpiralsVisualization()

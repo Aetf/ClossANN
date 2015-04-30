@@ -7,6 +7,7 @@
 #include <iostream>
 
 #include "ClossNet.h"
+#include "BPLayer.h"
 
 using namespace OpenANN;
 
@@ -18,6 +19,14 @@ ClossNet::ClossNet()
 {
     errorFunction = NO_E_DEFINED;
     Net::useDropout(false);
+}
+
+ClossNet& ClossNet::bpLayer(int units, ActivationFunction act, double stdDev, bool bias)
+{
+    architecture << "bp_layer " << units << " " << (int) act << " "
+                 << stdDev << " " << bias << " ";
+    addLayer(new BPLayer(infos.back(), units, bias, act, stdDev));
+    return *this;
 }
 
 void ClossNet::save(std::ostream& stream)
@@ -56,6 +65,17 @@ void ClossNet::load(std::istream& stream)
             OPENANN_DEBUG << "fully_connected " << units << " " << act << " "
                           << stdDev << " " << bias;
             fullyConnectedLayer(units, (ActivationFunction) act, stdDev, bias);
+        }
+        else if(type == "bp_layer")
+        {
+            int units;
+            int act;
+            double stdDev;
+            bool bias;
+            stream >> units >> act >> stdDev >> bias;
+            OPENANN_DEBUG << "bp_layer " << units << " " << act << " "
+                          << stdDev << " " << bias;
+            bpLayer(units, (ActivationFunction) act, stdDev, bias);
         }
         else if(type == "rbm")
         {
@@ -250,7 +270,7 @@ double ClossNet::error(unsigned int n)
 }
 
 Eigen::VectorXd ClossNet::error(std::vector<int>::const_iterator startN,
-                       std::vector<int>::const_iterator endN)
+                                std::vector<int>::const_iterator endN)
 {
     const int nPatterns = endN - startN;
     tempInput.conservativeResize(nPatterns, trainSet->inputs());
@@ -263,19 +283,7 @@ Eigen::VectorXd ClossNet::error(std::vector<int>::const_iterator startN,
     }
     forwardPropagate(nullptr);
     tempError = tempOutput - T;
-    return clossFunction(tempError);
-}
-
-template<typename Derived>
-Eigen::VectorXd ClossNet::clossFunction(const Eigen::MatrixBase<Derived> &YmT)
-{
-    double tmp = -2 * kernelSize * kernelSize;
-    double beta = 1 / (1 - exp(1/tmp));
-    Eigen::MatrixXd rbf = (YmT.array().square() / tmp).exp();
-
-    Eigen::VectorXd vecRBF = rbf.rowwise().mean();
-    auto err = beta * (1 - vecRBF.array());
-    return err;
+    return clossFunction(tempError).rowwise().sum();
 }
 
 double ClossNet::error()
@@ -313,4 +321,41 @@ void ClossNet::finishedIteration()
         save(oss);
         OPENANN_DEBUG << oss.str() << std::endl;
     }
+}
+
+void ClossNet::backpropagate()
+{
+    // initial delta is derivation of error function
+    Eigen::MatrixXd delta = clossDerivative(tempError).transpose().transpose();
+    Eigen::MatrixXd *pDelta = &delta;
+    int l = L;
+    for(std::vector<Layer*>::reverse_iterator layer = layers.rbegin();
+            layer != layers.rend(); ++layer, --l)
+    {
+        // Backprop of dE/dX is not required in input layer and first hidden layer
+        const bool backpropToPrevious = l > 2;
+        (**layer).backpropagate(pDelta, pDelta, backpropToPrevious);
+    }
+}
+
+template<typename Derived>
+Eigen::MatrixXd ClossNet::clossFunction(const Eigen::MatrixBase<Derived> &YmT)
+{
+    double tmp = -1 / (2 * kernelSize * kernelSize);
+    double beta = 1 / (1 - exp(tmp));
+    Eigen::MatrixXd rbf = (YmT.array().square() * tmp).exp();
+
+    auto err = beta * (1 - rbf.array());
+    return err;
+}
+
+template<typename Derived>
+Eigen::MatrixXd ClossNet::clossDerivative(const Eigen::MatrixBase<Derived>& x)
+{
+    double tmp = -1 / (2 * kernelSize * kernelSize);
+    double beta = 1 / (1 - exp(tmp));
+    Eigen::MatrixXd rbf = (x.array().square() * tmp).exp();
+
+    auto d = beta * rbf * x * (tmp * -2);
+    return d;
 }

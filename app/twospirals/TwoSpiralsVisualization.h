@@ -7,6 +7,7 @@
 #include <QGLWidget>
 #include <QKeyEvent>
 #include <QMutex>
+#include "ClossNet.h"
 
 using namespace OpenANN;
 
@@ -48,7 +49,7 @@ class TwoSpiralsVisualization : public QGLWidget
     TwoSpiralsDataSet trainingSet;
     TwoSpiralsDataSet testSet;
     bool showTraining, showTest, showPrediction, showSmooth;
-    Net* net;
+    ClossNet* net;
     StoppingCriteria stop;
 
 public:

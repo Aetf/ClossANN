@@ -6,6 +6,7 @@
 #include <vector>
 #include <sstream>
 
+using OpenANN::ActivationFunction;
 /**
  * @class ClossNet
  *
@@ -24,6 +25,23 @@ public:
      * Create feedforward neural network.
      */
     ClossNet();
+
+    /**
+     * @name Architecture Definition
+     * These functions must be called to define the architecture of the network.
+     */
+    ///@{
+    /**
+     * Add a fully connected hidden layer.
+     * @param units number of nodes (neurons)
+       * @param act activation function
+       * @param stdDev standard deviation of the Gaussian distributed initial weights
+       * @param bias add bias term
+       * @return this for chaining
+       */
+    ClossNet& bpLayer(int units, ActivationFunction act,
+                      double stdDev = 0.05, bool bias = true);
+    ///@}
 
     /**
      * @name Persistence
@@ -110,11 +128,14 @@ public:
     ///@}
 
 protected:
-
-    template<typename Derived>
-    Eigen::VectorXd clossFunction(const Eigen::MatrixBase<Derived>& ymt);
+    void backpropagate();
     Eigen::VectorXd error(std::vector<int>::const_iterator startN,
                           std::vector<int>::const_iterator endN);
+
+    template<typename Derived>
+    Eigen::MatrixXd clossFunction(const Eigen::MatrixBase<Derived>& ymt);
+    template<typename Derived>
+    Eigen::MatrixXd clossDerivative(const Eigen::MatrixBase<Derived>& x);
 };
 
 
