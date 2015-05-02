@@ -1,0 +1,11 @@
+<RCC>
+    <qresource prefix="/">
+        <file>main.qml</file>
+        <file>html/index.html</file>
+        <file>html/js/Chart.js</file>
+        <file>html/css/main.css</file>
+        <file>html/js/main.js</file>
+        <file>Chart.qml</file>
+        <file>Bridge.qml</file>
+    </qresource>
+</RCC>
