@@ -2,10 +2,32 @@
     <qresource prefix="/">
         <file>main.qml</file>
         <file>html/index.html</file>
-        <file>html/js/Chart.js</file>
         <file>html/css/main.css</file>
         <file>html/js/main.js</file>
         <file>Chart.qml</file>
         <file>Bridge.qml</file>
+        <file>html/js/jquery-2.1.3.min.js</file>
+        <file>html/js/highcharts/highcharts-3d.js</file>
+        <file>html/js/highcharts/highcharts-more.js</file>
+        <file>html/js/highcharts/highcharts.js</file>
+        <file>html/js/highcharts/themes/dark-blue.js</file>
+        <file>html/js/highcharts/themes/dark-green.js</file>
+        <file>html/js/highcharts/themes/dark-unica.js</file>
+        <file>html/js/highcharts/themes/gray.js</file>
+        <file>html/js/highcharts/themes/grid-light.js</file>
+        <file>html/js/highcharts/themes/grid.js</file>
+        <file>html/js/highcharts/themes/sand-signika.js</file>
+        <file>html/js/highcharts/themes/skies.js</file>
+        <file>html/js/highcharts/modules/broken-axis.js</file>
+        <file>html/js/highcharts/modules/canvas-tools.js</file>
+        <file>html/js/highcharts/modules/data.js</file>
+        <file>html/js/highcharts/modules/drilldown.js</file>
+        <file>html/js/highcharts/modules/exporting.js</file>
+        <file>html/js/highcharts/modules/funnel.js</file>
+        <file>html/js/highcharts/modules/heatmap.js</file>
+        <file>html/js/highcharts/modules/no-data-to-display.js</file>
+        <file>html/js/highcharts/modules/solid-gauge.js</file>
+        <file>html/js/highcharts/modules/treemap.js</file>
+        <file>html/test.html</file>
     </qresource>
 </RCC>

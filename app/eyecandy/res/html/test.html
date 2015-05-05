@@ -1,0 +1,97 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+    <meta charset="utf-8">
+    <title>mousemove demo</title>
+    <style>
+    div {
+        width: 220px;
+        height: 170px;
+        margin: 10px 50px 10px 10px;
+        background: yellow;
+        border: 2px groove;
+        float: right;
+    }
+    
+    p {
+        margin: 0;
+        margin-left: 10px;
+        color: red;
+        width: 220px;
+        height: 120px;
+        padding-top: 70px;
+        float: left;
+        font-size: 14px;
+    }
+    
+    span {
+        display: block;
+    }
+    </style>
+    <script type="text/javascript" src="qrc:///qtwebchannel/qwebchannel.js"></script>
+    <script src="https://code.jquery.com/jquery-1.10.2.js"></script>
+</head>
+
+<body>
+    <p>
+        <span>Move the mouse over the div.</span>
+        <span>&nbsp;</span>
+    </p>
+    <div></div>
+    <script>
+    var bridge;
+
+    initiateWebChannel();
+
+    function initiateWebChannel() {
+        console.log("Setting up WebChannel");
+        new QWebChannel(navigator.qtWebChannelTransport, function(channel) {
+            console.log("WebChannel initiated, further log should go to debuger console");
+            bridge = channel.objects.bridge;
+
+            fixMouseEvent();
+
+            $("div").mousedown(function(event) {
+                var pageCoords = "( " + event.pageX + ", " + event.pageY + " )";
+                console.log("mousedown at", pageCoords);
+                $("span:first").text("down at : " + pageCoords);
+
+                $("div").mousemove(function(event) {
+                    var pageCoords = "( " + event.pageX + ", " + event.pageY + " )";
+                    $("span:last").text("( event.pageX, event.pageY ) : " + pageCoords);
+                    console.log("mousemove at", pageCoords);
+                });
+            });
+            $(document).mouseup(function() {
+                console.log("mouseup");
+                $("span:last").text("mousemove off");
+                $("div").off("mousemove");
+            })
+        });
+    }
+
+    function fixMouseEvent() {
+        bridge.mouseDown.connect(function(x, y) {
+            $("div").trigger($.Event("mousedown", {
+                pageX: x,
+                pageY: y
+            }));
+        });
+        bridge.mouseMove.connect(function(x, y) {
+            $("div").trigger($.Event("mousemove", {
+                pageX: x,
+                pageY: y
+            }));
+        });
+        bridge.mouseUp.connect(function(x, y) {
+            $(document).trigger($.Event("mouseup", {
+                pageX: x,
+                pageY: y
+            }));
+        });
+    }
+    </script>
+</body>
+
+</html>

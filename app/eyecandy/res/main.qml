@@ -1,6 +1,7 @@
 import QtQuick 2.4
 import QtQuick.Controls 1.3
 import QtQuick.Layouts 1.1
+import UCWNeuralNet 1.0
 
 ApplicationWindow {
     id: root
@@ -40,9 +41,27 @@ ApplicationWindow {
         developerExtrasEnabled: true
 
         bridge: Bridge {
+            signal predictionUpdated(var data)
+
             function sayHello() {
                 console.log("Hello")
                 return "done"
+            }
+
+            property var handler: Handler
+
+            onInitiationDone: {
+                console.log("Loading finished")
+                Handler.configure();
+                timer.start()
+            }
+        }
+        Timer {
+            id: timer
+            interval: 2000
+            repeat: true
+            onTriggered: {
+                Handler.test()
             }
         }
     }

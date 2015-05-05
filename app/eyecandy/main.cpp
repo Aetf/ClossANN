@@ -5,7 +5,7 @@
 #include <QStyle>
 #include <QtQml>
 #include "models/recordsmodel.h"
-#include "logic/dialoghelper.h"
+#include "logic/uihandler.h"
 
 void registerRecordsModel();
 
@@ -33,6 +33,6 @@ void registerRecordsModel()
                                             "Uncreatable object, provide enums only");
     qmlRegisterType<RecordsModel>("RecordsModel", 1, 0, "RecordsModel");
 
-    qmlRegisterSingletonType<DialogHelper>("RecordsModel", 1, 0, "DialogHelper",
-                                           DialogHelper::DialogHelperProvider);
+    qmlRegisterSingletonType<UIHandler>("UCWNeuralNet", 1, 0, "Handler",
+                                        UIHandler::UIHandlerProvider);
 }
