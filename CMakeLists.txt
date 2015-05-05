@@ -3,24 +3,24 @@ cmake_minimum_required(VERSION 3.1.0)
 project(ClossANN)
 
 include(cmake/Utilities.cmake)
-include(cmake/FindOpenANN.cmake)
-include(cmake/FindEigen3.cmake)
-
+list(APPEND CMAKE_MODULE_PATH ${PROJECT_SOURCE_DIR}/cmake)
+find_package(OpenANN)
 if(NOT OPENANN_FOUND)
     message(FATAL_ERROR "Could not find OpenANN library. You can either "
                         "install it with your package management system or "
                         "download it from http://github.com/OpenANN/OpenANN and "
                         "install it with CMake.")
 endif()
+find_package(Eigen3)
 if(NOT EIGEN3_FOUND)
     message(FATAL_ERROR "Could not find Eigen 3 library. You can either "
                         "install it with your package management system or "
                         "download it from http://eigen.tuxfamily.org/ and "
                         "install it with CMake.")
 endif()
-
-include_directories(src ${OPENANN_INCLUDE_DIRS} ${EIGEN3_INCLUDE_DIRS})
-set(CLOSS_LINK_LIB openann)
+include_directories(SYSTEM ${OpenANN_INCLUDE_DIRS} ${EIGEN3_INCLUDE_DIRS})
+include_directories(src)
+set(CLOSS_LINK_LIB ${OpenANN_LIBRARIES})
 
 # Ensure out-of-source build
 if(${CMAKE_SOURCE_DIR} STREQUAL ${CMAKE_BINARY_DIR})
