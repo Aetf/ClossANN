@@ -38,6 +38,8 @@ public:
     void inTrainingMode(bool val);
     bool inTrainingMode() const;
 
+    void requestPrediction();
+
     /**
      * Creates moon shape dataset that form two classes.
      *
@@ -74,6 +76,7 @@ protected:
     void dispose();
 
 private:
+    bool predictionInRequest;
     bool inTrainingMode_;
     MatrixXd trainingIn;
     MatrixXd trainingOut;

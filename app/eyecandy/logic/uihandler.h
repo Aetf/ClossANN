@@ -30,8 +30,8 @@ public slots:
     void configure();
     void dispose();
     void test();
+    void requestPrediction();
 
-    QVariantList getPrediction();
     QVariantList getTrainingSet();
     QVariantList getTestingSet();
 
@@ -41,7 +41,6 @@ signals:
     void testingDataUpdated(QVariantList data);
 
 protected slots:
-    void onUnderlayPredictionUpdated(QVariantList data);
     void onTrainingFinished();
 
 private:
@@ -56,7 +55,6 @@ private:
     // neural network related
     bool configured;
     LearnTask *task;
-    QVariantList thePrediction;
 
     // async task handling
     QFutureWatcher<void> futureWatcher;

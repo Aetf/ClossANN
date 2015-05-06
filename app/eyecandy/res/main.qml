@@ -53,6 +53,8 @@ ApplicationWindow {
             onInitiationDone: {
                 console.log("Loading finished")
                 Handler.configure();
+                Handler.runAsync();
+
                 timer.start()
             }
         }
@@ -61,7 +63,7 @@ ApplicationWindow {
             interval: 2000
             repeat: true
             onTriggered: {
-                Handler.test()
+                Handler.requestPrediction()
             }
         }
     }

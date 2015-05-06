@@ -20,8 +20,8 @@ UIHandler::UIHandler(QObject *parent)
     , configured(false)
     , task(nullptr)
 {
-    connect(this, &UIHandler::onTrainingFinished,
-            &futureWatcher, &QFutureWatcher<void>::finished);
+    connect(&futureWatcher, &QFutureWatcher<void>::finished,
+            this, &UIHandler::onTrainingFinished);
 }
 
 UIHandler::~UIHandler()
@@ -48,8 +48,8 @@ void UIHandler::configure()
     if (configured) dispose();
 
     task = new LearnTask;
-    connect(this, &UIHandler::onUnderlayPredictionUpdated,
-            &task->data(), &UCWDataSet::predictionUpdated);
+    connect(&task->data(), &UCWDataSet::predictionUpdated,
+            this, &UIHandler::predictionUpdated);
 
     configured = true;
 
@@ -93,19 +93,15 @@ void UIHandler::run()
 
 void UIHandler::terminateTraining()
 {
+    if (!configured) return;
     QWriteLocker locker(&lockForCancelFlag);
     cancelFlag = true;
 }
 
-void UIHandler::onUnderlayPredictionUpdated(QVariantList data)
+void UIHandler::requestPrediction()
 {
-    thePrediction = data;
-    emit predictionUpdated(data);
-}
-
-QVariantList UIHandler::getPrediction()
-{
-    return thePrediction;
+    if (!configured) return;
+    task->data().requestPrediction();
 }
 
 QVariantList UIHandler::getTrainingSet()
@@ -157,19 +153,20 @@ void UIHandler::onTrainingFinished()
 void UIHandler::test()
 {
     static bool odd = true;
-    thePrediction.clear();
-    for(int x = 0; x < 30; x++)
+    const int MM = 10;
+    QVariantList thePrediction;
+    for(int x = 0; x < MM; x++)
     {
-        for(int y = 0; y < 30; y++)
+        for(int y = 0; y < MM; y++)
         {
             QVariantList point;
-            point << x / 30.0;
+            point << x / (double) MM;
             if(odd) {
-                point << (y%2 != 0? 0.1 : 0.9);
+                point << (y%2 != 0? -0.8 : 0.8);
             } else {
-                point << (y%2 == 0? 0.1 : 0.9);
+                point << (y%2 == 0? -0.8 : 0.8);
             }
-            point << y / 30.0;
+            point << y / (double) MM;
             thePrediction << QVariant(point);
         }
     }

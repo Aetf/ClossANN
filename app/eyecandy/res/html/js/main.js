@@ -26,7 +26,6 @@ function initiateWebChannel() {
         // connect to viewportChanged signal
         bridge.viewportChanged.connect(onViewportChanged);
 
-
         actualWork();
         bridge.doneInitiation();
     });
@@ -58,12 +57,16 @@ function actualWork() {
             renderTo: 'chartContainer',
             type: 'scatter',
             margin: 95,
+            animation: {
+                duration: 1000,
+                easing: "swing"
+            },
             options3d: {
                 enabled: true,
                 alpha: 10,
                 beta: 30,
-                depth: 250,
-                viewDistance: 5,
+                depth: 550,
+                viewDistance: 10,
                 frame: {
                     bottom: {
                         size: 1,
@@ -110,26 +113,31 @@ function actualWork() {
             gridLineWidth: 1
         },
         yAxis: {
-            min: 0,
+            min: -1,
             max: 1,
             title: null
         },
         zAxis: {
             min: 0,
-            max: 1
+            max: 1,
+            labels: {
+                enabled: true
+            }
         },
         series: [{
             name: 'Training Data',
-            colorByPoint: true,
+            colorByPoint: false,
+            marker: { radius: 2 },
             data: []
         }, {
             name: 'Test Data',
-            colorByPoint: true,
+            colorByPoint: false,
+            marker: { radius: 2 },
             data: []
         }, {
             name: 'Prediction',
-            colorByPoint: true,
-            marker: { radius: 1 },
+            colorByPoint: false,
+            marker: { radius: 3 },
             data: []
         }]
     });
