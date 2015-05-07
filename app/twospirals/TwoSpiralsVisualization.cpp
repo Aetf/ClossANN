@@ -13,7 +13,7 @@ TwoSpiralsVisualization::TwoSpiralsVisualization(
     : width(500), height(500),
       trainingSet(trainingInput, trainingOutput),
       testSet(testInput, testOutput), showTraining(true), showTest(true),
-      showPrediction(true), showSmooth(true), net(new Net)
+      showPrediction(true), showSmooth(true), net(new ClossNet)
 {
     std::memset(classes, 0, sizeof(double) * 100 * 100);
     trainingSet.setVisualization(this);

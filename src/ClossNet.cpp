@@ -326,7 +326,7 @@ void ClossNet::finishedIteration()
 void ClossNet::backpropagate()
 {
     // initial delta is derivation of error function
-    Eigen::MatrixXd delta = clossDerivative(tempError).transpose().transpose();
+    Eigen::MatrixXd delta = clossDerivative(tempError);
     Eigen::MatrixXd *pDelta = &delta;
     int l = L;
     for(std::vector<Layer*>::reverse_iterator layer = layers.rbegin();
