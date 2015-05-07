@@ -49,7 +49,7 @@ class TwoSpiralsVisualization : public QGLWidget
     TwoSpiralsDataSet trainingSet;
     TwoSpiralsDataSet testSet;
     bool showTraining, showTest, showPrediction, showSmooth;
-    ClossNet* net;
+    Net* net;
     StoppingCriteria stop;
 
 public:
