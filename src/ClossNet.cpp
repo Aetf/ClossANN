@@ -341,9 +341,9 @@ void ClossNet::backpropagate()
 template<typename Derived>
 Eigen::MatrixXd ClossNet::clossFunction(const Eigen::MatrixBase<Derived> &YmT)
 {
-    double tmp = -1 / (2 * kernelSize * kernelSize);
-    double beta = 1 / (1 - exp(tmp));
-    Eigen::MatrixXd rbf = (YmT.array().square() * tmp).exp();
+    double lambda = -1 / (2 * kernelSize * kernelSize);
+    double beta = 1 / (1 - exp(lambda));
+    Eigen::MatrixXd rbf = (YmT.array().square() * lambda).exp();
 
     auto err = beta * (1 - rbf.array());
     return err;
