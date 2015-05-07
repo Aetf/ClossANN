@@ -32,7 +32,7 @@ int main()
     RandomNumberGenerator().seed(0);
 
     // Create network
-    Net net;
+    ClossNet net;
     // Add an input layer with nI inputs, 1 hidden layer with 2 nodes and an
     // output layer with nO outputs. Use logistic activation function in hidden
     // layer and output layer.
@@ -51,8 +51,10 @@ int main()
     // Use network to predict labels of the training data
     for(int n = 0; n < nP; n++)
     {
-        Eigen::VectorXd y = net(dataSet.getInstance(n));
-        std::cout << y << std::endl;
+        auto input = dataSet.getInstance(n);
+        std::cout << input(0) << " xor " << input(1) << " = ";
+        Eigen::VectorXd y = net(input);
+        std::cout << y(0) << std::endl;
     }
 
     return 0;
