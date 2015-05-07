@@ -1,30 +1,28 @@
-# - Try to find ALGLIB
+# - Try to find QCustomPlot
 # Once done, this will define
 #
-#  ALGLIB_FOUND - system has ALGLIB
-#  ALGLIB_INCLUDE_DIRS - the ALGLIB include directories
-#  ALGLIB_LIBRARIES - link these to use ALGLIB
+#  QCustomPlot_FOUND - system has QCustomPlot
+#  QCustomPlot_INCLUDE_DIRS - the QCustomPlot include directories
+#  QCustomPlot_LIBRARIES - link these to use QCustomPlot
 
 include(LibFindMacros)
 
 macro (do_find_package MODULE_NAME)
     # Dependencies
-    #libfind_package(${MODULE_NAME} ALGLIB)
+#    libfind_package(${MODULE_NAME})
 
     # Use pkg-config to get hints about paths
-    libfind_pkg_check_modules(${MODULE_NAME}_PKGCONF alglib)
+    libfind_pkg_check_modules(${MODULE_NAME}_PKGCONF qcustomplot)
 
     # Include dir
     find_path(${MODULE_NAME}_INCLUDE_DIR
-        NAMES optimization.h
-        PATHS
-            ${${MODULE_NAME}_PKGCONF_INCLUDE_DIRS}
-            /usr/include/libalglib
+        NAMES qcustomplot.h
+        PATHS ${${MODULE_NAME}_PKGCONF_INCLUDE_DIRS}
     )
 
     # Finally the library itself
     find_library(${MODULE_NAME}_LIBRARY
-        NAMES alglib
+        NAMES qcustomplot
         PATHS ${${MODULE_NAME}_PKGCONF_LIBRARY_DIRS}
     )
 
@@ -34,4 +32,4 @@ macro (do_find_package MODULE_NAME)
     libfind_process(${MODULE_NAME})
 endmacro()
 
-do_find_package(ALGLIB)
+do_find_package(QCustomPlot)

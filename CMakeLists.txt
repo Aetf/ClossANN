@@ -11,14 +11,7 @@ if(NOT OPENANN_FOUND)
                         "download it from http://github.com/OpenANN/OpenANN and "
                         "install it with CMake.")
 endif()
-find_package(Eigen3)
-if(NOT EIGEN3_FOUND)
-    message(FATAL_ERROR "Could not find Eigen 3 library. You can either "
-                        "install it with your package management system or "
-                        "download it from http://eigen.tuxfamily.org/ and "
-                        "install it with CMake.")
-endif()
-include_directories(SYSTEM ${OpenANN_INCLUDE_DIRS} ${EIGEN3_INCLUDE_DIRS})
+include_directories(SYSTEM ${OpenANN_INCLUDE_DIRS})
 include_directories(src)
 set(CLOSS_LINK_LIB ${OpenANN_LIBRARIES})
 
