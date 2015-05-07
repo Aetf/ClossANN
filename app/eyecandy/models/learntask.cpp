@@ -25,8 +25,8 @@ LearnTask::LearnTask()
 
     // set stop criteria
     stopCriteria_->maximalIterations = 10000;
-    stopCriteria_->minimalSearchSpaceStep = 1e-10;
-    stopCriteria_->minimalValueDifferences = 1e-10;
+//    stopCriteria_->minimalSearchSpaceStep = 1e-10;
+//    stopCriteria_->minimalValueDifferences = 1e-10;
 }
 
 ClossNet &LearnTask::network()
