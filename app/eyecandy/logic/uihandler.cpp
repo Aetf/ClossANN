@@ -71,6 +71,8 @@ void UIHandler::run()
 {
     if (!configured) return;
 
+//    train(task->network(), "LMA", MSE, task->stopCriteria(), true);
+
     task->data().inTrainingMode(true);
     task->network().initialize();
 
@@ -78,15 +80,17 @@ void UIHandler::run()
 
     opt.setOptimizable(task->network());
     opt.setStopCriteria(task->stopCriteria());
+//    opt.optimize();
     while(opt.step())
     {
         OPENANN_DEBUG << "Iteration #" << opt.currentIteration()
                       << ", training error = "
                       << OpenANN::FloatingPointFormatter(opt.currentError(), 4);
-        {
-            QReadLocker locker(&lockForCancelFlag);
-            if(cancelFlag) break;
-        }
+        emit iterationFinished(opt.currentIteration(), opt.currentError());
+//        {
+//            QReadLocker locker(&lockForCancelFlag);
+//            if(cancelFlag) break;
+//        }
     }
     opt.result();
 }

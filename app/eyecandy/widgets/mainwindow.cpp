@@ -1,115 +1,115 @@
 #include "mainwindow.h"
 #include "ui_mainwindow.h"
 #include <QDebug>
+#include <QAction>
 #include <QDesktopWidget>
+#include <QTabWidget>
 #include <QScreen>
 #include <QMessageBox>
 #include <QMetaEnum>
+#include "logic/uihandler.h"
+#include "QtAwesome.h"
 
 MainWindow::MainWindow(QWidget *parent) :
-    QMainWindow(parent),
-    ui(new Ui::MainWindow)
+    QMainWindow(parent)
+    , ui(new Ui::MainWindow)
+    , handler(new UIHandler)
+    , awesome(new QtAwesome)
 {
+    awesome->initFontAwesome();
     ui->setupUi(this);
+    setupToolbar();
     setGeometry(400, 250, 542, 390);
 
-    setupDemo(18);
-//  setupPlayground(ui->customPlot);
-    // 0:  setupQuadraticDemo(ui->customPlot);
-    // 1:  setupSimpleDemo(ui->customPlot);
-    // 2:  setupSincScatterDemo(ui->customPlot);
-    // 3:  setupScatterStyleDemo(ui->customPlot);
-    // 4:  setupScatterPixmapDemo(ui->customPlot);
-    // 5:  setupLineStyleDemo(ui->customPlot);
-    // 6:  setupDateDemo(ui->customPlot);
-    // 7:  setupTextureBrushDemo(ui->customPlot);
-    // 8:  setupMultiAxisDemo(ui->customPlot);
-    // 9:  setupLogarithmicDemo(ui->customPlot);
-    // 10: setupRealtimeDataDemo(ui->customPlot);
-    // 11: setupParametricCurveDemo(ui->customPlot);
-    // 12: setupBarChartDemo(ui->customPlot);
-    // 13: setupStatisticalDemo(ui->customPlot);
-    // 14: setupSimpleItemDemo(ui->customPlot);
-    // 15: setupItemDemo(ui->customPlot);
-    // 16: setupStyledDemo(ui->customPlot);
-    // 17: setupAdvancedAxesDemo(ui->customPlot);
-    // 18: setupColorMapDemo(ui->customPlot);
-    // 19: setupFinancialDemo(ui->customPlot);
+    setupPlayground();
 
-    // for making screenshots of the current demo or all demos (for website screenshots):
-    //QTimer::singleShot(1500, this, SLOT(allScreenShots()));
-    //QTimer::singleShot(4000, this, SLOT(screenShot()));
+    ui->tabs->setUpdatesEnabled(false);
+    for (int i = 0; i!= 20; i++) {
+        if (i == 10) continue;
+        auto plot = new QCustomPlot;
+        setupDemo(i, plot);
+        ui->tabs->addTab(plot, demoName);
+    }
+    ui->tabs->setUpdatesEnabled(true);
+
+    // start training
+//    QTimer::singleShot(0, this, &MainWindow::clossnnDataSlot);
 }
 
-void MainWindow::setupDemo(int demoIndex)
+void MainWindow::setupToolbar()
+{
+    ui->actionTrain->setIcon(awesome->icon(fa::play));
+    connect(ui->actionTrain, &QAction::triggered,
+            this, &MainWindow::clossnnDataSlot);
+    ui->toolBar->addAction(ui->actionTrain);
+}
+
+void MainWindow::setupDemo(int demoIndex, QCustomPlot *plot)
 {
     switch (demoIndex)
     {
     case 0:
-        setupQuadraticDemo(ui->customPlot);
+        setupQuadraticDemo(plot);
         break;
     case 1:
-        setupSimpleDemo(ui->customPlot);
+        setupSimpleDemo(plot);
         break;
     case 2:
-        setupSincScatterDemo(ui->customPlot);
+        setupSincScatterDemo(plot);
         break;
     case 3:
-        setupScatterStyleDemo(ui->customPlot);
+        setupScatterStyleDemo(plot);
         break;
     case 4:
-        setupScatterPixmapDemo(ui->customPlot);
+        setupScatterPixmapDemo(plot);
         break;
     case 5:
-        setupLineStyleDemo(ui->customPlot);
+        setupLineStyleDemo(plot);
         break;
     case 6:
-        setupDateDemo(ui->customPlot);
+        setupDateDemo(plot);
         break;
     case 7:
-        setupTextureBrushDemo(ui->customPlot);
+        setupTextureBrushDemo(plot);
         break;
     case 8:
-        setupMultiAxisDemo(ui->customPlot);
+        setupMultiAxisDemo(plot);
         break;
     case 9:
-        setupLogarithmicDemo(ui->customPlot);
-        break;
-    case 10:
-        setupRealtimeDataDemo(ui->customPlot);
+        setupLogarithmicDemo(plot);
         break;
     case 11:
-        setupParametricCurveDemo(ui->customPlot);
+        setupParametricCurveDemo(plot);
         break;
     case 12:
-        setupBarChartDemo(ui->customPlot);
+        setupBarChartDemo(plot);
         break;
     case 13:
-        setupStatisticalDemo(ui->customPlot);
+        setupStatisticalDemo(plot);
         break;
     case 14:
-        setupSimpleItemDemo(ui->customPlot);
+        setupSimpleItemDemo(plot);
         break;
     case 15:
-        setupItemDemo(ui->customPlot);
+        setupItemDemo(plot);
         break;
     case 16:
-        setupStyledDemo(ui->customPlot);
+        setupStyledDemo(plot);
         break;
     case 17:
-        setupAdvancedAxesDemo(ui->customPlot);
+        setupAdvancedAxesDemo(plot);
         break;
     case 18:
-        setupColorMapDemo(ui->customPlot);
+        setupColorMapDemo(plot);
         break;
     case 19:
-        setupFinancialDemo(ui->customPlot);
+        setupFinancialDemo(plot);
         break;
     }
     setWindowTitle("QCustomPlot: "+demoName);
     statusBar()->clearMessage();
     currentDemoIndex = demoIndex;
-    ui->customPlot->replot();
+    plot->replot();
 }
 
 void MainWindow::setupQuadraticDemo(QCustomPlot *customPlot)
@@ -707,54 +707,6 @@ void MainWindow::setupLogarithmicDemo(QCustomPlot *customPlot)
     customPlot->axisRect()->insetLayout()->setInsetAlignment(0, Qt::AlignLeft|Qt::AlignTop); // make legend align in top left corner or axis rect
 }
 
-void MainWindow::setupRealtimeDataDemo(QCustomPlot *customPlot)
-{
-#if QT_VERSION < QT_VERSION_CHECK(4, 7, 0)
-    QMessageBox::critical(this, "", "You're using Qt < 4.7, the realtime data demo needs functions that are available with Qt 4.7 to work properly");
-#endif
-    demoName = "Real Time Data Demo";
-
-    // include this section to fully disable antialiasing for higher performance:
-    /*
-    customPlot->setNotAntialiasedElements(QCP::aeAll);
-    QFont font;
-    font.setStyleStrategy(QFont::NoAntialias);
-    customPlot->xAxis->setTickLabelFont(font);
-    customPlot->yAxis->setTickLabelFont(font);
-    customPlot->legend->setFont(font);
-    */
-    customPlot->addGraph(); // blue line
-    customPlot->graph(0)->setPen(QPen(Qt::blue));
-    customPlot->graph(0)->setBrush(QBrush(QColor(240, 255, 200)));
-    customPlot->graph(0)->setAntialiasedFill(false);
-    customPlot->addGraph(); // red line
-    customPlot->graph(1)->setPen(QPen(Qt::red));
-    customPlot->graph(0)->setChannelFillGraph(customPlot->graph(1));
-
-    customPlot->addGraph(); // blue dot
-    customPlot->graph(2)->setPen(QPen(Qt::blue));
-    customPlot->graph(2)->setLineStyle(QCPGraph::lsNone);
-    customPlot->graph(2)->setScatterStyle(QCPScatterStyle::ssDisc);
-    customPlot->addGraph(); // red dot
-    customPlot->graph(3)->setPen(QPen(Qt::red));
-    customPlot->graph(3)->setLineStyle(QCPGraph::lsNone);
-    customPlot->graph(3)->setScatterStyle(QCPScatterStyle::ssDisc);
-
-    customPlot->xAxis->setTickLabelType(QCPAxis::ltDateTime);
-    customPlot->xAxis->setDateTimeFormat("hh:mm:ss");
-    customPlot->xAxis->setAutoTickStep(false);
-    customPlot->xAxis->setTickStep(2);
-    customPlot->axisRect()->setupFullAxesBox();
-
-    // make left and bottom axes transfer their ranges to right and top axes:
-    connect(customPlot->xAxis, SIGNAL(rangeChanged(QCPRange)), customPlot->xAxis2, SLOT(setRange(QCPRange)));
-    connect(customPlot->yAxis, SIGNAL(rangeChanged(QCPRange)), customPlot->yAxis2, SLOT(setRange(QCPRange)));
-
-    // setup a timer that repeatedly calls MainWindow::realtimeDataSlot:
-    connect(&dataTimer, SIGNAL(timeout()), this, SLOT(realtimeDataSlot()));
-    dataTimer.start(0); // Interval 0 means to refresh as fast as possible
-}
-
 void MainWindow::setupParametricCurveDemo(QCustomPlot *customPlot)
 {
     demoName = "Parametric Curves Demo";
@@ -967,6 +919,7 @@ void MainWindow::setupItemDemo(QCustomPlot *customPlot)
 #endif
 
     demoName = "Item Demo";
+    bracketPlot = customPlot;
 
     customPlot->setInteractions(QCP::iRangeDrag | QCP::iRangeZoom);
     QCPGraph *graph = customPlot->addGraph();
@@ -1089,8 +1042,8 @@ void MainWindow::setupItemDemo(QCustomPlot *customPlot)
     dispersionText->setFont(QFont(font().family(), 10));
 
     // setup a timer that repeatedly calls MainWindow::bracketDataSlot:
-    connect(&dataTimer, SIGNAL(timeout()), this, SLOT(bracketDataSlot()));
-    dataTimer.start(0); // Interval 0 means to refresh as fast as possible
+    connect(&dataTimer2, SIGNAL(timeout()), this, SLOT(bracketDataSlot()));
+    dataTimer2.start(0); // Interval 0 means to refresh as fast as possible
 }
 
 void MainWindow::setupStyledDemo(QCustomPlot *customPlot)
@@ -1452,6 +1405,65 @@ void MainWindow::setupFinancialDemo(QCustomPlot *customPlot)
     volumeAxisRect->setMarginGroup(QCP::msLeft|QCP::msRight, group);
 }
 
+void MainWindow::clossnnDataSlot()
+{
+    connect(handler.get(), &UIHandler::predictionUpdated,
+            this, &MainWindow::onPredictionUpdated);
+    connect(handler.get(), &UIHandler::testingDataUpdated,
+            this, &MainWindow::onTestingDataUpdated);
+    connect(handler.get(), &UIHandler::trainingDataUpdated,
+            this, &MainWindow::onTrainingDataUpdated);
+    connect(handler.get(), &UIHandler::iterationFinished,
+            this, &MainWindow::onIterationFinished);
+    auto h = handler.get();
+    connect(&dataTimer, &QTimer::timeout,
+            this, [h] {
+        h->requestPrediction();
+    });
+    handler->configure();
+    handler->runAsync();
+    dataTimer.start(200);
+}
+
+void MainWindow::onIterationFinished(int iter, double error)
+{
+    static double start = QDateTime::currentDateTime().toMSecsSinceEpoch()/1000.0;
+    double key = QDateTime::currentDateTime().toMSecsSinceEpoch()/1000.0;
+    key -= start;
+    ui->plotErrorLine->graph(0)->addData(key, error);
+    // remove data of lines that's outside visible range:
+//    ui->plotColorMap->graph(0)->removeDataBefore(key-8);
+    // rescale value (vertical) axis to fit the current data:
+    ui->plotErrorLine->graph(0)->rescaleValueAxis();
+
+    // make key axis range scroll with the data (at a constant range size of 8):
+    ui->plotErrorLine->xAxis->setRange(key+0.25, 8, Qt::AlignRight);
+    ui->plotErrorLine->xAxis->rescale();
+    ui->plotErrorLine->replot();
+}
+
+void MainWindow::onPredictionUpdated(QVariantList data)
+{
+    for (auto item : data) {
+        auto point = item.toList();
+        auto colorMap = static_cast<QCPColorMap*>(ui->plotColorMap->plottable(0));
+        int x, y;
+        colorMap->data()->coordToCell(point[0].toDouble(), point[2].toDouble(), &x, &y);
+        colorMap->data()->setCell(x, y, point[1].toDouble());
+    }
+    ui->plotColorMap->replot();
+}
+
+void MainWindow::onTestingDataUpdated(QVariantList data)
+{
+
+}
+
+void MainWindow::onTrainingDataUpdated(QVariantList data)
+{
+
+}
+
 void MainWindow::realtimeDataSlot()
 {
     // calculate two new data points:
@@ -1466,24 +1478,24 @@ void MainWindow::realtimeDataSlot()
         double value0 = qSin(key); //qSin(key*1.6+qCos(key*1.7)*2)*10 + qSin(key*1.2+0.56)*20 + 26;
         double value1 = qCos(key); //qSin(key*1.3+qCos(key*1.2)*1.2)*7 + qSin(key*0.9+0.26)*24 + 26;
         // add data to lines:
-        ui->customPlot->graph(0)->addData(key, value0);
-        ui->customPlot->graph(1)->addData(key, value1);
+        ui->plotColorMap->graph(0)->addData(key, value0);
+        ui->plotColorMap->graph(1)->addData(key, value1);
         // set data of dots:
-        ui->customPlot->graph(2)->clearData();
-        ui->customPlot->graph(2)->addData(key, value0);
-        ui->customPlot->graph(3)->clearData();
-        ui->customPlot->graph(3)->addData(key, value1);
+        ui->plotColorMap->graph(2)->clearData();
+        ui->plotColorMap->graph(2)->addData(key, value0);
+        ui->plotColorMap->graph(3)->clearData();
+        ui->plotColorMap->graph(3)->addData(key, value1);
         // remove data of lines that's outside visible range:
-        ui->customPlot->graph(0)->removeDataBefore(key-8);
-        ui->customPlot->graph(1)->removeDataBefore(key-8);
+        ui->plotColorMap->graph(0)->removeDataBefore(key-8);
+        ui->plotColorMap->graph(1)->removeDataBefore(key-8);
         // rescale value (vertical) axis to fit the current data:
-        ui->customPlot->graph(0)->rescaleValueAxis();
-        ui->customPlot->graph(1)->rescaleValueAxis(true);
+        ui->plotColorMap->graph(0)->rescaleValueAxis();
+        ui->plotColorMap->graph(1)->rescaleValueAxis(true);
         lastPointKey = key;
     }
     // make key axis range scroll with the data (at a constant range size of 8):
-    ui->customPlot->xAxis->setRange(key+0.25, 8, Qt::AlignRight);
-    ui->customPlot->replot();
+    ui->plotColorMap->xAxis->setRange(key+0.25, 8, Qt::AlignRight);
+    ui->plotColorMap->replot();
 
     // calculate frames per second:
     static double lastFpsKey;
@@ -1494,7 +1506,7 @@ void MainWindow::realtimeDataSlot()
         ui->statusBar->showMessage(
             QString("%1 FPS, Total Data points: %2")
             .arg(frameCount/(key-lastFpsKey), 0, 'f', 0)
-            .arg(ui->customPlot->graph(0)->data()->count()+ui->customPlot->graph(1)->data()->count())
+            .arg(ui->plotColorMap->graph(0)->data()->count()+ui->plotColorMap->graph(1)->data()->count())
             , 0);
         lastFpsKey = key;
         frameCount = 0;
@@ -1519,11 +1531,11 @@ void MainWindow::bracketDataSlot()
         x[i] = i/(double)(n-1)*34 - 17;
         y[i] = qExp(-x[i]*x[i]/20.0)*qSin(k*x[i]+phase);
     }
-    ui->customPlot->graph()->setData(x, y);
+    bracketPlot->graph()->setData(x, y);
 
     itemDemoPhaseTracer->setGraphKey((8*M_PI+fmod(M_PI*1.5-phase, 6*M_PI))/k);
 
-    ui->customPlot->replot();
+    bracketPlot->replot();
 
     // calculate frames per second:
     double key = secs;
@@ -1535,21 +1547,76 @@ void MainWindow::bracketDataSlot()
         ui->statusBar->showMessage(
             QString("%1 FPS, Total Data points: %2")
             .arg(frameCount/(key-lastFpsKey), 0, 'f', 0)
-            .arg(ui->customPlot->graph(0)->data()->count())
+            .arg(bracketPlot->graph(0)->data()->count())
             , 0);
         lastFpsKey = key;
         frameCount = 0;
     }
 }
 
-void MainWindow::setupPlayground(QCustomPlot *customPlot)
+void MainWindow::setupPlayground()
 {
-    Q_UNUSED(customPlot)
+    demoName = "Closs ANN";
+
+    setupColorMap(ui->plotColorMap);
+    setupErrorLine(ui->plotErrorLine);
+}
+
+void MainWindow::setupColorMap(QCustomPlot *customPlot)
+{
+    // configure axis rect:
+    customPlot->setInteractions(QCP::iRangeDrag|QCP::iRangeZoom); // this will also allow rescaling the color scale by dragging/zooming
+    customPlot->axisRect()->setupFullAxesBox(true);
+    customPlot->xAxis->setLabel("x");
+    customPlot->yAxis->setLabel("y");
+
+    // set up the QCPColorMap:
+    QCPColorMap *colorMap = new QCPColorMap(customPlot->xAxis, customPlot->yAxis);
+    customPlot->addPlottable(colorMap);
+    int nx = 30;
+    int ny = 30;
+    colorMap->data()->setSize(nx, ny); // we want the color map to have nx * ny data points
+    colorMap->data()->setRange(QCPRange(0, 1), QCPRange(0, 1)); // and span the coordinate range -4..4 in both key (x) and value (y) dimensions
+
+    // add a color scale:
+    QCPColorScale *colorScale = new QCPColorScale(customPlot);
+    colorScale->setDataRange(QCPRange(-1, 1));
+    customPlot->plotLayout()->addElement(0, 1, colorScale); // add it to the right of the main axis rect
+    colorScale->setType(QCPAxis::atRight); // scale shall be vertical bar with tick/axis labels right (actually atRight is already the default)
+    colorMap->setColorScale(colorScale); // associate the color map with the color scale
+    colorScale->axis()->setLabel("Magnetic Field Strength");
+
+    // set the color gradient of the color map to one of the presets:
+    colorMap->setGradient(QCPColorGradient::gpPolar);
+    // we could have also created a QCPColorGradient instance and added own colors to
+    // the gradient, see the documentation of QCPColorGradient for what's possible.
+
+    // rescale the data dimension (color) such that all data points lie in the span visualized by the color gradient:
+    colorMap->rescaleDataRange();
+
+    // make sure the axis rect and color scale synchronize their bottom and top margins (so they line up):
+    QCPMarginGroup *marginGroup = new QCPMarginGroup(customPlot);
+    customPlot->axisRect()->setMarginGroup(QCP::msBottom|QCP::msTop, marginGroup);
+    colorScale->setMarginGroup(QCP::msBottom|QCP::msTop, marginGroup);
+
+    // rescale the key (x) and value (y) axes so the whole color map is visible:
+    customPlot->rescaleAxes();
+}
+
+void MainWindow::setupErrorLine(QCustomPlot *customPlot)
+{
+    auto graph = customPlot->addGraph();
+    graph->setPen(QPen(Qt::blue));
+    graph->setBrush(QBrush(QColor(240, 255, 200)));
+    graph->setAntialiasedFill(false);
+
+    // make left and bottom axes transfer their ranges to right and top axes:
+    connect(customPlot->xAxis, SIGNAL(rangeChanged(QCPRange)), customPlot->xAxis2, SLOT(setRange(QCPRange)));
+    connect(customPlot->yAxis, SIGNAL(rangeChanged(QCPRange)), customPlot->yAxis2, SLOT(setRange(QCPRange)));
 }
 
 MainWindow::~MainWindow()
 {
-    delete ui;
 }
 
 void MainWindow::screenShot()
@@ -1564,75 +1631,3 @@ void MainWindow::screenShot()
     pm.save("./screenshots/"+fileName);
     qApp->quit();
 }
-
-void MainWindow::allScreenShots()
-{
-#if QT_VERSION < QT_VERSION_CHECK(5, 0, 0)
-    QPixmap pm = QPixmap::grabWindow(qApp->desktop()->winId(), this->x()+2, this->y()+2, this->frameGeometry().width()-4, this->frameGeometry().height()-4);
-#else
-    QPixmap pm = qApp->primaryScreen()->grabWindow(qApp->desktop()->winId(), this->x()+2, this->y()+2, this->frameGeometry().width()-4, this->frameGeometry().height()-4);
-#endif
-    QString fileName = demoName.toLower()+".png";
-    fileName.replace(" ", "");
-    pm.save("./screenshots/"+fileName);
-
-    if (currentDemoIndex < 19)
-    {
-        if (dataTimer.isActive())
-            dataTimer.stop();
-        dataTimer.disconnect();
-        delete ui->customPlot;
-        ui->customPlot = new QCustomPlot(ui->centralWidget);
-        ui->verticalLayout->addWidget(ui->customPlot);
-        setupDemo(currentDemoIndex+1);
-        // setup delay for demos that need time to develop proper look:
-        int delay = 250;
-        if (currentDemoIndex == 10) // Next is Realtime data demo
-            delay = 12000;
-        else if (currentDemoIndex == 15) // Next is Item demo
-            delay = 5000;
-        QTimer::singleShot(delay, this, SLOT(allScreenShots()));
-    } else
-    {
-        qApp->quit();
-    }
-}
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-

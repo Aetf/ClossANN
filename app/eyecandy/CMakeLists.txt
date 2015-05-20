@@ -25,6 +25,8 @@ if(QCustomPlot_FOUND)
     include_directories(${QCustomPlot_INCLUDE_DIRS})
 endif()
 
+
+
 # collect all cpp files
 aux_source_directory(. SRC_LIST)
 aux_source_directory(logic SRC_LIST)
@@ -35,6 +37,8 @@ if(QCustomPlot_FOUND)
 endif()
 # collect resource file
 list(APPEND SRC_LIST res/qml.qrc)
+# use QtAwesome
+include(libs/UseQtAwesome.cmake)
 
 add_compile_options(${CLOSS_COMPILER_FLAGS})
 add_executable(${PROJECT_NAME} ${SRC_LIST})

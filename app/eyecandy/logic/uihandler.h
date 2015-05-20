@@ -39,6 +39,7 @@ signals:
     void predictionUpdated(QVariantList data);
     void trainingDataUpdated(QVariantList data);
     void testingDataUpdated(QVariantList data);
+    void iterationFinished(int iter, double error);
 
 protected slots:
     void onTrainingFinished();
