@@ -1,0 +1,3 @@
+[submodule "app/eyecandy/libs/QtAwesome"]
+	path = app/eyecandy/libs/QtAwesome
+	url = https://github.com/gamecreature/QtAwesome.git
