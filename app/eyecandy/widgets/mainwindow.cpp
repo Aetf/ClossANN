@@ -36,7 +36,7 @@ void MainWindow::setupToolbar()
 {
     ui->actionTrain->setIcon(awesome->icon(fa::play));
     connect(ui->actionTrain, &QAction::triggered,
-            this, &MainWindow::clossnnDataSlot);
+            this, &MainWindow::trainClossNN);
     ui->toolBar->addAction(ui->actionTrain);
 }
 
@@ -639,7 +639,7 @@ void MainWindow::setupAdvancedAxesDemo(QCustomPlot *customPlot)
     wideAxisRect->axis(QCPAxis::atLeft, 1)->setRangeLower(0);
 }
 
-void MainWindow::clossnnDataSlot()
+void MainWindow::trainClossNN()
 {
     connect(handler.get(), &UIHandler::predictionUpdated,
             this, &MainWindow::onPredictionUpdated);
@@ -648,7 +648,7 @@ void MainWindow::clossnnDataSlot()
     connect(handler.get(), &UIHandler::trainingDataUpdated,
             this, &MainWindow::onTrainingDataUpdated);
     connect(handler.get(), &UIHandler::iterationFinished,
-            this, &MainWindow::onIterationFinished);
+            this, &MainWindow::onTrainIterationFinished);
     auto h = handler.get();
     connect(&dataTimer, &QTimer::timeout,
             this, [h] {
@@ -659,7 +659,7 @@ void MainWindow::clossnnDataSlot()
     dataTimer.start(200);
 }
 
-void MainWindow::onIterationFinished(int iter, double error)
+void MainWindow::onTrainIterationFinished(int iter, double error)
 {
     static double start = QDateTime::currentDateTime().toMSecsSinceEpoch()/1000.0;
     double key = QDateTime::currentDateTime().toMSecsSinceEpoch()/1000.0;
@@ -696,55 +696,6 @@ void MainWindow::onTestingDataUpdated(QVariantList data)
 void MainWindow::onTrainingDataUpdated(QVariantList data)
 {
 
-}
-
-void MainWindow::realtimeDataSlot()
-{
-    // calculate two new data points:
-#if QT_VERSION < QT_VERSION_CHECK(4, 7, 0)
-    double key = 0;
-#else
-    double key = QDateTime::currentDateTime().toMSecsSinceEpoch()/1000.0;
-#endif
-    static double lastPointKey = 0;
-    if (key-lastPointKey > 0.01) // at most add point every 10 ms
-    {
-        double value0 = qSin(key); //qSin(key*1.6+qCos(key*1.7)*2)*10 + qSin(key*1.2+0.56)*20 + 26;
-        double value1 = qCos(key); //qSin(key*1.3+qCos(key*1.2)*1.2)*7 + qSin(key*0.9+0.26)*24 + 26;
-        // add data to lines:
-        ui->plotColorMap->graph(0)->addData(key, value0);
-        ui->plotColorMap->graph(1)->addData(key, value1);
-        // set data of dots:
-        ui->plotColorMap->graph(2)->clearData();
-        ui->plotColorMap->graph(2)->addData(key, value0);
-        ui->plotColorMap->graph(3)->clearData();
-        ui->plotColorMap->graph(3)->addData(key, value1);
-        // remove data of lines that's outside visible range:
-        ui->plotColorMap->graph(0)->removeDataBefore(key-8);
-        ui->plotColorMap->graph(1)->removeDataBefore(key-8);
-        // rescale value (vertical) axis to fit the current data:
-        ui->plotColorMap->graph(0)->rescaleValueAxis();
-        ui->plotColorMap->graph(1)->rescaleValueAxis(true);
-        lastPointKey = key;
-    }
-    // make key axis range scroll with the data (at a constant range size of 8):
-    ui->plotColorMap->xAxis->setRange(key+0.25, 8, Qt::AlignRight);
-    ui->plotColorMap->replot();
-
-    // calculate frames per second:
-    static double lastFpsKey;
-    static int frameCount;
-    ++frameCount;
-    if (key-lastFpsKey > 2) // average fps over 2 seconds
-    {
-        ui->statusBar->showMessage(
-            QString("%1 FPS, Total Data points: %2")
-            .arg(frameCount/(key-lastFpsKey), 0, 'f', 0)
-            .arg(ui->plotColorMap->graph(0)->data()->count()+ui->plotColorMap->graph(1)->data()->count())
-            , 0);
-        lastFpsKey = key;
-        frameCount = 0;
-    }
 }
 
 void MainWindow::bracketDataSlot()
@@ -792,30 +743,30 @@ void MainWindow::setupPlayground()
 {
     demoName = "Closs ANN";
 
-    setupColorMap(ui->plotColorMap);
+    setupProblemPlane(ui->plotColorMap);
     setupErrorLine(ui->plotErrorLine);
 }
 
-void MainWindow::setupColorMap(QCustomPlot *customPlot)
+void MainWindow::setupProblemPlane(QCustomPlot *plot)
 {
     // configure axis rect:
-    customPlot->setInteractions(QCP::iRangeDrag|QCP::iRangeZoom); // this will also allow rescaling the color scale by dragging/zooming
-    customPlot->axisRect()->setupFullAxesBox(true);
-    customPlot->xAxis->setLabel("x");
-    customPlot->yAxis->setLabel("y");
+    plot->setInteractions(QCP::iRangeDrag|QCP::iRangeZoom); // this will also allow rescaling the color scale by dragging/zooming
+    plot->axisRect()->setupFullAxesBox(true);
+    plot->xAxis->setLabel("x");
+    plot->yAxis->setLabel("y");
 
     // set up the QCPColorMap:
-    QCPColorMap *colorMap = new QCPColorMap(customPlot->xAxis, customPlot->yAxis);
-    customPlot->addPlottable(colorMap);
+    QCPColorMap *colorMap = new QCPColorMap(plot->xAxis, plot->yAxis);
+    plot->addPlottable(colorMap);
     int nx = 30;
     int ny = 30;
     colorMap->data()->setSize(nx, ny); // we want the color map to have nx * ny data points
     colorMap->data()->setRange(QCPRange(0, 1), QCPRange(0, 1)); // and span the coordinate range -4..4 in both key (x) and value (y) dimensions
 
     // add a color scale:
-    QCPColorScale *colorScale = new QCPColorScale(customPlot);
+    QCPColorScale *colorScale = new QCPColorScale(plot);
     colorScale->setDataRange(QCPRange(-1, 1));
-    customPlot->plotLayout()->addElement(0, 1, colorScale); // add it to the right of the main axis rect
+    plot->plotLayout()->addElement(0, 1, colorScale); // add it to the right of the main axis rect
     colorScale->setType(QCPAxis::atRight); // scale shall be vertical bar with tick/axis labels right (actually atRight is already the default)
     colorMap->setColorScale(colorScale); // associate the color map with the color scale
     colorScale->axis()->setLabel("Magnetic Field Strength");
@@ -829,12 +780,12 @@ void MainWindow::setupColorMap(QCustomPlot *customPlot)
     colorMap->rescaleDataRange();
 
     // make sure the axis rect and color scale synchronize their bottom and top margins (so they line up):
-    QCPMarginGroup *marginGroup = new QCPMarginGroup(customPlot);
-    customPlot->axisRect()->setMarginGroup(QCP::msBottom|QCP::msTop, marginGroup);
+    QCPMarginGroup *marginGroup = new QCPMarginGroup(plot);
+    plot->axisRect()->setMarginGroup(QCP::msBottom|QCP::msTop, marginGroup);
     colorScale->setMarginGroup(QCP::msBottom|QCP::msTop, marginGroup);
 
     // rescale the key (x) and value (y) axes so the whole color map is visible:
-    customPlot->rescaleAxes();
+    plot->rescaleAxes();
 }
 
 void MainWindow::setupErrorLine(QCustomPlot *customPlot)

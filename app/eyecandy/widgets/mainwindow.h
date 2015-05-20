@@ -34,22 +34,21 @@ public:
     void setupAdvancedAxesDemo(QCustomPlot *customPlot);
 
     void setupPlayground();
-    void setupColorMap(QCustomPlot *customPlot);
+    void setupProblemPlane(QCustomPlot *plot);
     void setupErrorLine(QCustomPlot *customPlot);
 
 protected:
     void setupToolbar();
 
 private slots:
-    void clossnnDataSlot();
-    void realtimeDataSlot();
+    void trainClossNN();
     void bracketDataSlot();
     void screenShot();
 
     void onPredictionUpdated(QVariantList data);
     void onTestingDataUpdated(QVariantList data);
     void onTrainingDataUpdated(QVariantList data);
-    void onIterationFinished(int iter, double error);
+    void onTrainIterationFinished(int iter, double error);
 
 private:
     unique_ptr<Ui::MainWindow> ui;

@@ -1,5 +1,6 @@
 # QtCreator files
 *.pro.user*
+.autosave
 CMakeLists.txt.user*
 
 # KDevelop files
