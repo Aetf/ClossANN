@@ -66,7 +66,7 @@ function actualWork() {
                 alpha: 10,
                 beta: 30,
                 depth: 550,
-                viewDistance: 10,
+                viewDistance: 15,
                 frame: {
                     bottom: {
                         size: 1,

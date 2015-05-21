@@ -37,6 +37,7 @@ ApplicationWindow {
     Chart {
         id: mainChart
         anchors.fill: parent
+        focus: true
 
         developerExtrasEnabled: true
 
@@ -52,12 +53,14 @@ ApplicationWindow {
 
             onInitiationDone: {
                 console.log("Loading finished")
-                Handler.configure();
-                Handler.runAsync();
-
-                timer.start()
             }
         }
+        Keys.onPressed: {
+                Handler.configure();
+                Handler.runAsync();
+                timer.start()
+        }
+
         Timer {
             id: timer
             interval: 2000
