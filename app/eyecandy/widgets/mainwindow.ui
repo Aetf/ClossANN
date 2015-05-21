@@ -18,20 +18,30 @@
     <item>
      <widget class="QTabWidget" name="tabs">
       <property name="currentIndex">
-       <number>0</number>
+       <number>1</number>
       </property>
-      <widget class="QWidget" name="tab0">
+      <widget class="QWidget" name="tabParam">
        <attribute name="title">
-        <string>Tab 1</string>
+        <string>参数设定</string>
+       </attribute>
+      </widget>
+      <widget class="QWidget" name="tabMonitor">
+       <attribute name="title">
+        <string>当前运行</string>
        </attribute>
        <layout class="QHBoxLayout" name="horizontalLayout_2">
         <item>
-         <widget class="QCustomPlot" name="plotColorMap" native="true"/>
-        </item>
-        <item>
          <widget class="QCustomPlot" name="plotErrorLine" native="true"/>
         </item>
+        <item>
+         <widget class="QCustomPlot" name="plotColorMap" native="true"/>
+        </item>
        </layout>
+      </widget>
+      <widget class="QWidget" name="tabStatistics">
+       <attribute name="title">
+        <string>统计数据</string>
+       </attribute>
       </widget>
      </widget>
     </item>

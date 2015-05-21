@@ -4,7 +4,6 @@
 #include <QMainWindow>
 #include <QTimer>
 #include <QVariantList>
-#include <qcustomplot.h>
 #include <memory>
 
 namespace Ui {
@@ -12,6 +11,11 @@ class MainWindow;
 }
 class UIHandler;
 class QCustomPlot;
+class QCPAxis;
+class QCPColorMap;
+class QCPColorScale;
+class QCPGraph;
+class QCPItemTracer;
 class QtAwesome;
 
 using std::unique_ptr;
@@ -35,30 +39,35 @@ public:
 
     void setupPlayground();
     void setupProblemPlane(QCustomPlot *plot);
-    void setupErrorLine(QCustomPlot *customPlot);
+    void setupErrorLine(QCustomPlot *plot);
 
 protected:
     void setupToolbar();
+    QCPColorScale *createPredictColorScale(QCustomPlot *plot);
+    QCPColorMap *createPredictMap(QCPAxis *xAxis, QCPAxis *yAxis, QCPColorScale *scale);
+    void setupTrainingGraph(QCustomPlot *plot);
+    void setupTestingGraph(QCustomPlot *plot);
 
 private slots:
     void trainClossNN();
     void bracketDataSlot();
     void screenShot();
 
-    void onPredictionUpdated(QVariantList data);
-    void onTestingDataUpdated(QVariantList data);
-    void onTrainingDataUpdated(QVariantList data);
     void onTrainIterationFinished(int iter, double error);
 
 private:
     unique_ptr<Ui::MainWindow> ui;
     unique_ptr<UIHandler> handler;
+    unique_ptr<QtAwesome> awesome;
+
+    QCPColorMap *predictMap;
+    QCPGraph *trainingGraph;
+    QCPGraph *testingGraph;
     QString demoName;
     QTimer dataTimer;
     QTimer dataTimer2;
     QCustomPlot *bracketPlot;
     QCPItemTracer *itemDemoPhaseTracer;
-    unique_ptr<QtAwesome> awesome;
     int currentDemoIndex;
 };
 

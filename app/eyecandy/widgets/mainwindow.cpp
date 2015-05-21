@@ -5,8 +5,10 @@
 #include <QDesktopWidget>
 #include <QTabWidget>
 #include <QScreen>
+#include <QList>
 #include <QMessageBox>
 #include <QMetaEnum>
+#include <qcustomplot.h>
 #include "logic/uihandler.h"
 #include "QtAwesome.h"
 
@@ -15,6 +17,9 @@ MainWindow::MainWindow(QWidget *parent) :
     , ui(new Ui::MainWindow)
     , handler(new UIHandler)
     , awesome(new QtAwesome)
+    , predictMap(nullptr)
+    , trainingGraph(nullptr)
+    , testingGraph(nullptr)
 {
     awesome->initFontAwesome();
     ui->setupUi(this);
@@ -641,12 +646,6 @@ void MainWindow::setupAdvancedAxesDemo(QCustomPlot *customPlot)
 
 void MainWindow::trainClossNN()
 {
-    connect(handler.get(), &UIHandler::predictionUpdated,
-            this, &MainWindow::onPredictionUpdated);
-    connect(handler.get(), &UIHandler::testingDataUpdated,
-            this, &MainWindow::onTestingDataUpdated);
-    connect(handler.get(), &UIHandler::trainingDataUpdated,
-            this, &MainWindow::onTrainingDataUpdated);
     connect(handler.get(), &UIHandler::iterationFinished,
             this, &MainWindow::onTrainIterationFinished);
     auto h = handler.get();
@@ -661,41 +660,19 @@ void MainWindow::trainClossNN()
 
 void MainWindow::onTrainIterationFinished(int iter, double error)
 {
-    static double start = QDateTime::currentDateTime().toMSecsSinceEpoch()/1000.0;
-    double key = QDateTime::currentDateTime().toMSecsSinceEpoch()/1000.0;
-    key -= start;
-    ui->plotErrorLine->graph(0)->addData(key, error);
+//    static double start = QDateTime::currentDateTime().toMSecsSinceEpoch()/1000.0;
+//    double key = QDateTime::currentDateTime().toMSecsSinceEpoch()/1000.0;
+//    key -= start;
+    ui->plotErrorLine->graph(0)->addData(iter, error);
     // remove data of lines that's outside visible range:
 //    ui->plotColorMap->graph(0)->removeDataBefore(key-8);
     // rescale value (vertical) axis to fit the current data:
     ui->plotErrorLine->graph(0)->rescaleValueAxis();
 
     // make key axis range scroll with the data (at a constant range size of 8):
-    ui->plotErrorLine->xAxis->setRange(key+0.25, 8, Qt::AlignRight);
+//    ui->plotErrorLine->xAxis->setRange(key+0.25, 8, Qt::AlignRight);
     ui->plotErrorLine->xAxis->rescale();
     ui->plotErrorLine->replot();
-}
-
-void MainWindow::onPredictionUpdated(QVariantList data)
-{
-    for (auto item : data) {
-        auto point = item.toList();
-        auto colorMap = static_cast<QCPColorMap*>(ui->plotColorMap->plottable(0));
-        int x, y;
-        colorMap->data()->coordToCell(point[0].toDouble(), point[2].toDouble(), &x, &y);
-        colorMap->data()->setCell(x, y, point[1].toDouble());
-    }
-    ui->plotColorMap->replot();
-}
-
-void MainWindow::onTestingDataUpdated(QVariantList data)
-{
-
-}
-
-void MainWindow::onTrainingDataUpdated(QVariantList data)
-{
-
 }
 
 void MainWindow::bracketDataSlot()
@@ -755,49 +732,160 @@ void MainWindow::setupProblemPlane(QCustomPlot *plot)
     plot->xAxis->setLabel("x");
     plot->yAxis->setLabel("y");
 
-    // set up the QCPColorMap:
-    QCPColorMap *colorMap = new QCPColorMap(plot->xAxis, plot->yAxis);
-    plot->addPlottable(colorMap);
-    int nx = 30;
-    int ny = 30;
-    colorMap->data()->setSize(nx, ny); // we want the color map to have nx * ny data points
-    colorMap->data()->setRange(QCPRange(0, 1), QCPRange(0, 1)); // and span the coordinate range -4..4 in both key (x) and value (y) dimensions
+    // add predict map and its color scale
+    auto scale = createPredictColorScale(plot);
+    plot->plotLayout()->addElement(0, 1, scale);
 
-    // add a color scale:
-    QCPColorScale *colorScale = new QCPColorScale(plot);
-    colorScale->setDataRange(QCPRange(-1, 1));
-    plot->plotLayout()->addElement(0, 1, colorScale); // add it to the right of the main axis rect
-    colorScale->setType(QCPAxis::atRight); // scale shall be vertical bar with tick/axis labels right (actually atRight is already the default)
-    colorMap->setColorScale(colorScale); // associate the color map with the color scale
-    colorScale->axis()->setLabel("Magnetic Field Strength");
+    predictMap = createPredictMap(plot->xAxis, plot->yAxis, scale);
+    plot->addPlottable(predictMap);
 
-    // set the color gradient of the color map to one of the presets:
-    colorMap->setGradient(QCPColorGradient::gpPolar);
-    // we could have also created a QCPColorGradient instance and added own colors to
-    // the gradient, see the documentation of QCPColorGradient for what's possible.
+    // add training data scatter
+    setupTrainingGraph(plot);
 
-    // rescale the data dimension (color) such that all data points lie in the span visualized by the color gradient:
-    colorMap->rescaleDataRange();
-
-    // make sure the axis rect and color scale synchronize their bottom and top margins (so they line up):
-    QCPMarginGroup *marginGroup = new QCPMarginGroup(plot);
-    plot->axisRect()->setMarginGroup(QCP::msBottom|QCP::msTop, marginGroup);
-    colorScale->setMarginGroup(QCP::msBottom|QCP::msTop, marginGroup);
+    // add testing data scatter
+    setupTestingGraph(plot);
 
     // rescale the key (x) and value (y) axes so the whole color map is visible:
     plot->rescaleAxes();
 }
 
-void MainWindow::setupErrorLine(QCustomPlot *customPlot)
+QCPColorScale *MainWindow::createPredictColorScale(QCustomPlot *plot)
 {
-    auto graph = customPlot->addGraph();
+    auto scale = new QCPColorScale(plot);
+    scale->setDataRange(QCPRange(-1, 1));
+    scale->setType(QCPAxis::atRight); // scale shall be vertical bar with tick/axis labels right (actually atRight is already the default)
+    scale->axis()->setLabel("Prediction Result");
+    scale->setGradient(QCPColorGradient::gpPolar);
+
+    // make sure the axis rect and color scale synchronize their bottom and top margins (so they line up):
+    QCPMarginGroup *marginGroup = new QCPMarginGroup(plot);
+    plot->axisRect()->setMarginGroup(QCP::msBottom|QCP::msTop, marginGroup);
+    scale->setMarginGroup(QCP::msBottom|QCP::msTop, marginGroup);
+
+    return scale;
+}
+
+QCPColorMap *MainWindow::createPredictMap(QCPAxis *xAxis, QCPAxis *yAxis, QCPColorScale *scale)
+{
+    int nx = 30;
+    int ny = 30;
+
+    // set up the QCPColorMap for prediction plane
+    auto map = new QCPColorMap(xAxis, yAxis);
+    // we want the color map to have nx * ny data points
+    map->data()->setSize(nx, ny);
+    // and span the coordinate range -1..1 in both key (x) and value (y) dimensions
+    map->data()->setRange(QCPRange(0, 1), QCPRange(0, 1));
+
+    // connect to color scale
+    map->setColorScale(scale);
+
+    // connect to data change signal
+    connect(handler.get(), &UIHandler::predictionUpdated,
+            [=](auto data){
+        for (auto item : data) {
+            auto point = item.toList();
+            int x, y;
+            map->data()->coordToCell(point[0].toDouble(), point[2].toDouble(), &x, &y);
+            map->data()->setCell(x, y, point[1].toDouble());
+        }
+        map->parentPlot()->replot();
+    });
+
+    return map;
+}
+
+const int TotalClassLabel = 2;
+const double labels[TotalClassLabel] = { -1.0, 1.0 };
+class DataUpdater
+{
+    QList<QCPGraph*> series;
+
+public:
+    DataUpdater(const QList<QCPGraph*> s) : series(s)
+    { }
+
+    void operator ()(QVariantList data)
+    {
+        for (auto graph : series) {
+            graph->clearData();
+        }
+
+        for (auto item : data) {
+            auto point = item.toList();
+            auto z = point[1].toDouble();
+            QCPGraph *graph;
+            for (int i = 0; i!= TotalClassLabel; i++) {
+                qDebug() << "z =" << z << "label is" << labels[i];
+                if (qFuzzyCompare(z, labels[i])) {
+                    graph = series[i];
+                    break;
+                }
+            }
+            if (graph) {
+                graph->addData(point[0].toDouble(), point[2].toDouble());
+            }
+        }
+        if (!series.isEmpty()) {
+            // only need to request replot on one graph
+            series[0]->parentPlot()->replot();
+        }
+    }
+};
+
+void MainWindow::setupTrainingGraph(QCustomPlot *plot)
+{
+    const QColor colors[TotalClassLabel] = { Qt::blue, Qt::red };
+
+    QPen pen;
+    QList<QCPGraph *> series;
+    series.reserve(TotalClassLabel);
+    for (int i = 0; i!= TotalClassLabel; i++)
+    {
+        auto graph = plot->addGraph();
+        graph->setLineStyle(QCPGraph::lsNone);
+        graph->setScatterStyle(QCPScatterStyle::ssCircle);
+        pen.setColor(colors[i]);
+        graph->setPen(pen);
+        series.append(graph);
+    }
+    // connect to data change signal
+    connect(handler.get(), &UIHandler::trainingDataUpdated,
+            DataUpdater(series));
+}
+
+void MainWindow::setupTestingGraph(QCustomPlot *plot)
+{
+    const QColor colors[TotalClassLabel] = { Qt::blue, Qt::red };
+
+    QPen pen;
+    QList<QCPGraph *> series;
+    series.reserve(TotalClassLabel);
+    for (int i = 0; i!= TotalClassLabel; i++)
+    {
+        auto graph = plot->addGraph();
+        graph->setLineStyle(QCPGraph::lsNone);
+        graph->setScatterStyle(QCPScatterStyle::ssTriangle);
+        pen.setColor(colors[i]);
+        graph->setPen(pen);
+        series.append(graph);
+    }
+    // connect to data change signal
+    connect(handler.get(), &UIHandler::testingDataUpdated,
+            DataUpdater(series));
+}
+
+void MainWindow::setupErrorLine(QCustomPlot *plot)
+{
+    auto graph = plot->addGraph();
     graph->setPen(QPen(Qt::blue));
     graph->setBrush(QBrush(QColor(240, 255, 200)));
     graph->setAntialiasedFill(false);
 
+    plot->axisRect()->setupFullAxesBox();
     // make left and bottom axes transfer their ranges to right and top axes:
-    connect(customPlot->xAxis, SIGNAL(rangeChanged(QCPRange)), customPlot->xAxis2, SLOT(setRange(QCPRange)));
-    connect(customPlot->yAxis, SIGNAL(rangeChanged(QCPRange)), customPlot->yAxis2, SLOT(setRange(QCPRange)));
+//    connect(plot->xAxis, SIGNAL(rangeChanged(QCPRange)), plot->xAxis2, SLOT(setRange(QCPRange)));
+//    connect(plot->yAxis, SIGNAL(rangeChanged(QCPRange)), plot->yAxis2, SLOT(setRange(QCPRange)));
 }
 
 MainWindow::~MainWindow()
