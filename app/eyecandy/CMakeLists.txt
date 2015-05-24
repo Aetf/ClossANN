@@ -39,6 +39,8 @@ endif()
 list(APPEND SRC_LIST res/qml.qrc)
 # use QtAwesome
 include(libs/UseQtAwesome.cmake)
+# use ColumnResizer
+include(libs/UseColumnResizer.cmake)
 
 add_compile_options(${CLOSS_COMPILER_FLAGS})
 add_executable(${PROJECT_NAME} ${SRC_LIST})

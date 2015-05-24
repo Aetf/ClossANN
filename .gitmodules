@@ -1,3 +1,6 @@
 [submodule "app/eyecandy/libs/QtAwesome"]
 	path = app/eyecandy/libs/QtAwesome
 	url = https://github.com/gamecreature/QtAwesome.git
+[submodule "app/eyecandy/libs/columnresizer"]
+	path = app/eyecandy/libs/columnresizer
+	url = https://github.com/agateau/columnresizer.git

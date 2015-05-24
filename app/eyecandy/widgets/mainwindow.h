@@ -17,6 +17,7 @@ class QCPColorScale;
 class QCPGraph;
 class QCPItemTracer;
 class QtAwesome;
+class ColumnResizer;
 
 using std::unique_ptr;
 
@@ -43,6 +44,8 @@ public:
 
 protected:
     void setupToolbar();
+    void setupOptionPage();
+
     QCPColorScale *createPredictColorScale(QCustomPlot *plot);
     QCPColorMap *createPredictMap(QCPAxis *xAxis, QCPAxis *yAxis, QCPColorScale *scale);
     void setupTrainingGraph(QCustomPlot *plot);
@@ -57,6 +60,8 @@ private slots:
 
 private:
     unique_ptr<Ui::MainWindow> ui;
+    unique_ptr<ColumnResizer> colResizer;
+
     unique_ptr<UIHandler> handler;
     unique_ptr<QtAwesome> awesome;
 

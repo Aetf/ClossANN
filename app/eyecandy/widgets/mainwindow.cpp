@@ -11,10 +11,12 @@
 #include <qcustomplot.h>
 #include "logic/uihandler.h"
 #include "QtAwesome.h"
+#include "columnresizer.h"
 
 MainWindow::MainWindow(QWidget *parent) :
     QMainWindow(parent)
     , ui(new Ui::MainWindow)
+    , colResizer(new ColumnResizer(this))
     , handler(new UIHandler)
     , awesome(new QtAwesome)
     , predictMap(nullptr)
@@ -24,7 +26,7 @@ MainWindow::MainWindow(QWidget *parent) :
     awesome->initFontAwesome();
     ui->setupUi(this);
     setupToolbar();
-    setGeometry(400, 250, 542, 390);
+    setupOptionPage();
 
     setupPlayground();
 
@@ -43,6 +45,12 @@ void MainWindow::setupToolbar()
     connect(ui->actionTrain, &QAction::triggered,
             this, &MainWindow::trainClossNN);
     ui->toolBar->addAction(ui->actionTrain);
+}
+
+void MainWindow::setupOptionPage()
+{
+    colResizer->addWidgetsFromLayout(ui->groupNet->layout(), 0);
+    colResizer->addWidgetsFromLayout(ui->groupCloss->layout(), 0);
 }
 
 void MainWindow::setupDemo(int demoIndex, QCustomPlot *plot)
