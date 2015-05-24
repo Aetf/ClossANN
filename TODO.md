@@ -6,6 +6,7 @@
 [ ] Integer x axis in error line
 [ ] stop and pause ability
 [ ] Abnormal exit
+[ ] More data source
 [ ] More figures
 [ ] Proper window size
 [ ] Save info about each run
