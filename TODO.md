@@ -5,7 +5,10 @@
 [ ] Integer x axis in error line
 [ ] stop and pause ability
 [ ] Abnormal exit
+[ ] More figures
+[ ] Proper window size
 [ ] Dataset trainingmode multi-thread safe
 [ ] error line tracking mouse show point data
 [ ] prediction plane color fine tune
 [ ] connect func for unique_ptr
+[ ] Rework eyecandy libs include to use function
