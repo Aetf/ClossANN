@@ -1,4 +1,5 @@
 [ ] options to select different data
+[ ] implement variable learning rate
 [ ] toggle training and testing data display
 [ ] show training and testing data when not training
 [ ] show prediction plane immediately after net init (not necessarily in training)
