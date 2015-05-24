@@ -7,6 +7,7 @@
 [ ] Abnormal exit
 [ ] More figures
 [ ] Proper window size
+[ ] Save info about each run
 [ ] Dataset trainingmode multi-thread safe
 [ ] error line tracking mouse show point data
 [ ] prediction plane color fine tune
