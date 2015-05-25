@@ -3,6 +3,8 @@
 #include <QDebug>
 #include <QAction>
 #include <QDesktopWidget>
+#include <QDoubleSpinBox>
+#include <QPushButton>
 #include <QTabWidget>
 #include <QScreen>
 #include <QList>
@@ -10,13 +12,15 @@
 #include <QMetaEnum>
 #include <qcustomplot.h>
 #include "logic/uihandler.h"
+#include "models/layerdescmodel.h"
+#include "widgets/layerdelegate.h"
+#include "utils.h"
 #include "QtAwesome.h"
 #include "columnresizer.h"
 
-MainWindow::MainWindow(QWidget *parent) :
-    QMainWindow(parent)
+MainWindow::MainWindow(QWidget *parent)
+    : QMainWindow(parent)
     , ui(new Ui::MainWindow)
-    , colResizer(new ColumnResizer(this))
     , handler(new UIHandler)
     , awesome(new QtAwesome)
     , predictMap(nullptr)
@@ -49,8 +53,85 @@ void MainWindow::setupToolbar()
 
 void MainWindow::setupOptionPage()
 {
+    auto colResizer = new ColumnResizer(this);
     colResizer->addWidgetsFromLayout(ui->groupNet->layout(), 0);
     colResizer->addWidgetsFromLayout(ui->groupCloss->layout(), 0);
+    
+    connect(ui->spinLearnRate, Select<double>::OverloadOf(&QDoubleSpinBox::valueChanged),
+            this, [=](auto value){
+        this->currentParam.learningRate(value);
+    });
+    connect(ui->spinKernelSize, Select<double>::OverloadOf(&QDoubleSpinBox::valueChanged),
+            this, [=](auto value){
+        this->currentParam.kernelSize(value);
+    });
+    connect(ui->spinPValue, Select<double>::OverloadOf(&QDoubleSpinBox::valueChanged),
+            this, [=](auto value){
+        this->currentParam.pValue(value);
+    });
+
+    auto layersModel = new LayerDescModel(this);
+    ui->tableNetStru->setModel(layersModel);
+    ui->tableNetStru->setItemDelegate(new LayerDelegate(this));
+    ui->tableNetStru->setSelectionMode(QAbstractItemView::SingleSelection);
+    ui->tableNetStru->setSelectionBehavior(QAbstractItemView::SelectRows);
+
+    connect(ui->tableNetStru->selectionModel(), &QItemSelectionModel::currentRowChanged,
+            this, &MainWindow::updateButtons);
+
+    connect(ui->btnInsertLayer, &QPushButton::clicked,
+            this, [=]{
+        auto pos = this->ui->tableNetStru->selectionModel()->currentIndex().row();
+        layersModel->insertLayer(pos + 1, LayerDesc());
+    });
+    connect(ui->btnRemoveLayer, &QPushButton::clicked,
+            this, [=]{
+        auto pos = this->ui->tableNetStru->selectionModel()->currentIndex().row();
+        layersModel->removeRows(pos, 1);
+    });
+    connect(ui->btnApplyConfig, &QPushButton::clicked,
+            this, [=]{
+        LearnParam param(ui->spinLearnRate->value(),
+                         ui->spinKernelSize->value(),
+                         ui->spinPValue->value());
+        param.layers(layersModel->layers());
+
+        handler->configure(param);
+    });
+
+    displayDefaultOptions();
+    ui->tableNetStru->selectRow(0);
+}
+
+void MainWindow::displayDefaultOptions()
+{
+    LearnParam param;
+    ui->spinKernelSize->setValue(param.kernelSize());
+    ui->spinLearnRate->setValue(param.learningRate());
+    ui->spinPValue->setValue(param.pValue());
+    auto model = ui->tableNetStru->model();
+    model->removeRows(0, model->rowCount());
+    model->insertRows(0, param.layers().size());
+    for (int i = 0; i!= param.layers().size(); i++) {
+        QVariant v;
+        v.setValue(param.layers()[i]);
+        model->setData(model->index(i, 0), v, LayerDescModel::LayerDataRole);
+    }
+}
+
+void MainWindow::updateButtons(const QModelIndex &curr, const QModelIndex &prev)
+{
+    auto row = curr.row();
+    if (row == 0) {
+        ui->btnRemoveLayer->setEnabled(false);
+        ui->btnInsertLayer->setEnabled(true);
+    } else if (row == ui->tableNetStru->model()->rowCount() - 1) {
+        ui->btnRemoveLayer->setEnabled(false);
+        ui->btnInsertLayer->setEnabled(false);
+    } else {
+        ui->btnRemoveLayer->setEnabled(true);
+        ui->btnInsertLayer->setEnabled(true);
+    }
 }
 
 void MainWindow::setupDemo(int demoIndex, QCustomPlot *plot)
@@ -661,7 +742,7 @@ void MainWindow::trainClossNN()
             this, [h] {
         h->requestPrediction();
     });
-    handler->configure();
+    handler->configure(LearnParam());
     handler->runAsync();
     dataTimer.start(200);
 }

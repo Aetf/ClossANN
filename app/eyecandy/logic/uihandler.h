@@ -8,6 +8,7 @@
 
 class ClossNet;
 class LearnTask;
+class LearnParam;
 class QQmlEngine;
 class QJSEngine;
 namespace OpenANN {
@@ -27,7 +28,7 @@ public slots:
     void runAsync();
     void run();
     void terminateTraining();
-    void configure();
+    void configure(const LearnParam &param);
     void dispose();
     void test();
     void requestPrediction();

@@ -1,32 +1,54 @@
 #include "learntask.h"
+#include "models/learnparam.h"
 #include "models/ucwdataset.h"
 #include "ClossNet.h"
 #include "OpenANN/OpenANN"
 
 using namespace OpenANN;
 
-LearnTask::LearnTask()
+LearnTask::LearnTask(const LearnParam &param)
 {
+    // Step 1. setup stopping criteria
+    stopCriteria_ = make_unique(new StoppingCriteria(param.stoppingCriteria()));
+
+    // Step 2. setup data source
+    data_ = make_unique(createDataSourceFromParam(param));
+
+    // Step 3. setup network
     network_ = make_unique(new ClossNet);
-    stopCriteria_ = make_unique(new StoppingCriteria);
-    data_ = make_unique(new UCWDataSet);
 
+    // set parameters
+    network_->setKernelSize(param.kernelSize());
+    network_->setPValue(param.pValue());
+    network_->setLearningRate(param.learningRate());
     // initialize MLP
-    network_->inputLayer(data_->inputs())
-    // use this as only hidden layer to try extreme learning machine
-    //.extremeLayer(1500, RECTIFIER, 1.0)
-    .fullyConnectedLayer(20, TANH)
-    .fullyConnectedLayer(20, TANH)
-//    net->bpLayer(20, TANH)
-//    .bpLayer(20, TANH)
-    .outputLayer(data_->outputs(), TANH)
-    .trainingSet(*data_);
+    for (auto layer : param.layers()) {
+        switch (layer.type) {
+        case LayerDesc::Input:
+            network_->inputLayer(data_->inputs());
+            break;
+        case LayerDesc::FullyConnected:
+            network_->fullyConnectedLayer(layer.nUnit, (ActivationFunction)layer.activationFunc);
+            break;
+        case LayerDesc::Output:
+            network_->outputLayer(data_->outputs(), (ActivationFunction)layer.activationFunc);
+            break;
+        default:
+            break;
+        }
+    }
+    network_->trainingSet(*data_);
     network_->initialize();
+}
 
-    // set stop criteria
-    stopCriteria_->maximalIterations = 10000;
-//    stopCriteria_->minimalSearchSpaceStep = 1e-10;
-//    stopCriteria_->minimalValueDifferences = 1e-10;
+UCWDataSet *LearnTask::createDataSourceFromParam(const LearnParam &param)
+{
+    switch (param.dataSource()) {
+    case LearnParam::TwoSprial:
+        return new UCWDataSet;
+    default:
+        return nullptr;
+    }
 }
 
 ClossNet &LearnTask::network()

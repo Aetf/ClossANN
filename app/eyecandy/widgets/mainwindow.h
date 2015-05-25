@@ -5,6 +5,7 @@
 #include <QTimer>
 #include <QVariantList>
 #include <memory>
+#include "models/learnparam.h"
 
 namespace Ui {
 class MainWindow;
@@ -45,6 +46,9 @@ public:
 protected:
     void setupToolbar();
     void setupOptionPage();
+    void displayDefaultOptions();
+
+    void trainClossNN();
 
     QCPColorScale *createPredictColorScale(QCustomPlot *plot);
     QCPColorMap *createPredictMap(QCPAxis *xAxis, QCPAxis *yAxis, QCPColorScale *scale);
@@ -52,15 +56,14 @@ protected:
     void setupTestingGraph(QCustomPlot *plot);
 
 private slots:
-    void trainClossNN();
     void bracketDataSlot();
     void screenShot();
+    void updateButtons(const QModelIndex &curr, const QModelIndex &prev);
 
     void onTrainIterationFinished(int iter, double error);
 
 private:
     unique_ptr<Ui::MainWindow> ui;
-    unique_ptr<ColumnResizer> colResizer;
 
     unique_ptr<UIHandler> handler;
     unique_ptr<QtAwesome> awesome;
@@ -73,6 +76,8 @@ private:
     QTimer dataTimer2;
     QCustomPlot *bracketPlot;
     QCPItemTracer *itemDemoPhaseTracer;
+
+    LearnParam currentParam;
     int currentDemoIndex;
 };
 

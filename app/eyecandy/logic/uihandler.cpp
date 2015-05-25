@@ -1,6 +1,7 @@
 #include "ClossNet.h"
 #include "InterruptableLMA.h"
 #include "uihandler.h"
+#include "models/learnparam.h"
 #include "models/learntask.h"
 #include "models/ucwdataset.h"
 #include <OpenANN/OpenANN>
@@ -43,11 +44,11 @@ QObject *UIHandler::UIHandlerProvider(QQmlEngine *engine, QJSEngine *scriptEngin
     return new UIHandler;
 }
 
-void UIHandler::configure()
+void UIHandler::configure(const LearnParam &param)
 {
     if (configured) dispose();
 
-    task = new LearnTask;
+    task = new LearnTask(param);
     connect(&task->data(), &UCWDataSet::predictionUpdated,
             this, &UIHandler::predictionUpdated);
 
