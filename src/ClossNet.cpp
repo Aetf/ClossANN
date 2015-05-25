@@ -16,6 +16,7 @@ using namespace OpenANN;
  */
 ClossNet::ClossNet()
     : kernelSize(0.5)
+    , pValue(2.0)
 {
     errorFunction = NO_E_DEFINED;
     Net::useDropout(false);
@@ -33,6 +34,8 @@ void ClossNet::save(std::ostream& stream)
 {
     Net::save(stream);
     stream << "kernelSize " << kernelSize;
+    stream << "pValue" << pValue;
+    stream << "learningRate" << learningRate;
 }
 
 void ClossNet::load(std::istream& stream)
@@ -228,6 +231,18 @@ void ClossNet::load(std::istream& stream)
             stream >> k;
             setKernelSize(k);
         }
+        else if(type == "pValue")
+        {
+            double p = 0.0;
+            stream >> p;
+            setPValue(p);
+        }
+        else if(type == "learningRate")
+        {
+            double l = 0.0;
+            stream >> l;
+            setLearningRate(l);
+        }
         else
         {
             throw OpenANNException("Unknown layer type: '" + type + "'.");
@@ -261,6 +276,29 @@ ClossNet& ClossNet::setKernelSize(double kernel)
     return *this;
 }
 
+double ClossNet::getPValue() const
+{
+    return pValue;
+}
+
+ClossNet& ClossNet::setPValue(double value)
+{
+    pValue = value;
+    return *this;
+}
+
+double ClossNet::getLearningRate() const
+{
+    return learningRate;
+}
+
+ClossNet& ClossNet::setLearningRate(double learningRate)
+{
+    OPENANN_DEBUG << "Warning: learning rate not implemented yet!"
+                  << "Fixed value 1.0 is actually used now.";
+    this->learningRate = learningRate;
+    return *this;
+}
 
 double ClossNet::error(unsigned int n)
 {
@@ -343,7 +381,8 @@ Eigen::MatrixXd ClossNet::clossFunction(const Eigen::MatrixBase<Derived> &YmT)
 {
     double lambda = -1 / (2 * kernelSize * kernelSize);
     double beta = 1 / (1 - exp(lambda));
-    Eigen::MatrixXd rbf = (YmT.array().square() * lambda).exp();
+//    Eigen::MatrixXd rbf = (YmT.array().square() * lambda).exp();
+    Eigen::MatrixXd rbf = (YmT.array().pow(pValue) * lambda).exp();
 
     auto err = beta * (1 - rbf.array());
     return err;
@@ -352,10 +391,11 @@ Eigen::MatrixXd ClossNet::clossFunction(const Eigen::MatrixBase<Derived> &YmT)
 template<typename Derived>
 Eigen::MatrixXd ClossNet::clossDerivative(const Eigen::MatrixBase<Derived>& x)
 {
-    double tmp = -1 / (2 * kernelSize * kernelSize);
-    double beta = 1 / (1 - exp(tmp));
-    Eigen::MatrixXd rbf = (x.array().square() * tmp).exp();
+    double lambda = -1 / (2 * kernelSize * kernelSize);
+    double beta = 1 / (1 - exp(lambda));
+//    Eigen::MatrixXd rbf = (x.array().square() * lambda).exp();
+    Eigen::MatrixXd rbf = (x.array().pow(pValue) * lambda).exp();
 
-    auto d = beta * rbf * x * (tmp * -2);
+    auto d = beta * rbf * (-lambda) * pValue * x.array().pow(pValue -1).matrix();
     return d;
 }

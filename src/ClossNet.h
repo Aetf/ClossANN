@@ -19,6 +19,8 @@ class ClossNet : public OpenANN::Net
 {
 protected:
     double kernelSize;
+    double pValue;
+    double learningRate;
 
 public:
     /**
@@ -112,6 +114,28 @@ public:
      * @return this for chaining
      */
     ClossNet& setKernelSize(double kernel);
+    /**
+     * Request pValue parameter for Closs func.
+     * @return pValue for Closs function in this neural network.
+     */
+    double getPValue() const;
+    /**
+     * Set pValue parameter for Closs func.
+     * @param value for p value for Closs function in this neural network.
+     * @return this for chaining
+     */
+    ClossNet& setPValue(double value);
+    /**
+     * Request learning rate for all layers in this neural network.
+     * @return the learn rate
+     */
+    double getLearningRate() const;
+    /**
+     * Set learning rate for all layers in this neural network.
+     * @param learningRate for all layers in this neural network.
+     * @return  this for chaining
+     */
+    ClossNet& setLearningRate(double learningRate);
     ///@}
 
     /**
