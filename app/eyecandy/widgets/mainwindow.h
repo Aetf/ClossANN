@@ -6,6 +6,7 @@
 #include <QVariantList>
 #include <memory>
 #include "models/learnparam.h"
+#include "models/ucwdataset.h"
 
 namespace Ui {
 class MainWindow;
@@ -55,8 +56,8 @@ protected:
 
     QCPColorScale *createPredictColorScale(QCustomPlot *plot);
     QCPColorMap *createPredictMap(QCPAxis *xAxis, QCPAxis *yAxis, QCPColorScale *scale);
-    void setupTrainingGraph(QCustomPlot *plot);
-    void setupTestingGraph(QCustomPlot *plot);
+    void setupTrainingGraph(QCustomPlot *plot, range outputRange, int labelsCount);
+    void setupTestingGraph(QCustomPlot *plot, range outputRange, int labelsCount);
 
 private slots:
     void bracketDataSlot();

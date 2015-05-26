@@ -19,6 +19,9 @@ UCWDataSet::UCWDataSet(DataSource source, int density, double maxDiameter)
     , testingOut()
     , trainingData(nullptr)
     , testingData(nullptr)
+    , inputRange_()
+    , outputRange_()
+    , outputLabelCount_(2)
 {
     switch (source) {
     case TwoSpirals:
@@ -66,6 +69,21 @@ Eigen::VectorXd& UCWDataSet::getTarget(int i)
 
 void UCWDataSet::finishIteration(Learner& learner)
 {
+}
+
+range UCWDataSet::inputRange() const
+{
+    return inputRange_;
+}
+
+range UCWDataSet::outputRange() const
+{
+    return outputRange_;
+}
+
+int UCWDataSet::outputLabelCount() const
+{
+    return outputLabelCount_;
 }
 
 bool UCWDataSet::inTrainingMode() const
@@ -129,6 +147,10 @@ void UCWDataSet::generateTwoSpirals(int density, double maxDiameter)
 
     OpenANN::scaleData(testingIn, 0.0, 1.0);
     OpenANN::scaleData(trainingIn, 0.0, 1.0);
+
+    inputRange_ = {0.0, 1.0};
+    outputRange_ = {-1.0, 1.0};
+    outputLabelCount_ = 2;
 }
 
 void UCWDataSet::generateMoon(int density, double maxDiameter)
@@ -182,4 +204,7 @@ void UCWDataSet::generateMoon(int density, double maxDiameter)
 
     OpenANN::scaleData(testingIn, 0.0, 1.0);
     OpenANN::scaleData(trainingIn, 0.0, 1.0);
+    inputRange_ = {0.0, 1.0};
+    outputRange_ = {-1.0, 1.0};
+    outputLabelCount_ = 2;
 }

@@ -124,6 +124,8 @@ void MainWindow::applyOptions()
     param.layers(layersModel->layers());
 
     handler->configure(param);
+
+    // change data range in prediction plane
 }
 
 void MainWindow::displayDefaultOptions()
@@ -833,31 +835,6 @@ void MainWindow::setupPlayground()
     setupErrorLine(ui->plotErrorLine);
 }
 
-void MainWindow::setupProblemPlane(QCustomPlot *plot)
-{
-    // configure axis rect:
-    plot->setInteractions(QCP::iRangeDrag|QCP::iRangeZoom); // this will also allow rescaling the color scale by dragging/zooming
-    plot->axisRect()->setupFullAxesBox(true);
-    plot->xAxis->setLabel("x");
-    plot->yAxis->setLabel("y");
-
-    // add predict map and its color scale
-    auto scale = createPredictColorScale(plot);
-    plot->plotLayout()->addElement(0, 1, scale);
-
-    predictMap = createPredictMap(plot->xAxis, plot->yAxis, scale);
-    plot->addPlottable(predictMap);
-
-    // add training data scatter
-    setupTrainingGraph(plot);
-
-    // add testing data scatter
-    setupTestingGraph(plot);
-
-    // rescale the key (x) and value (y) axes so the whole color map is visible:
-    plot->rescaleAxes();
-}
-
 QCPColorScale *MainWindow::createPredictColorScale(QCustomPlot *plot)
 {
     auto scale = new QCPColorScale(plot);
@@ -904,29 +881,43 @@ QCPColorMap *MainWindow::createPredictMap(QCPAxis *xAxis, QCPAxis *yAxis, QCPCol
     return map;
 }
 
-const int TotalClassLabel = 2;
-const double labels[TotalClassLabel] = { -1.0, 1.0 };
 class DataUpdater
 {
-    QList<QCPGraph*> series;
+    QList<pair<double,QCPGraph*>> graphAndLabels;
+    range labelRange;
 
 public:
-    DataUpdater(const QList<QCPGraph*> s) : series(s)
-    { }
+    DataUpdater(const QList<QCPGraph*> s, range labelRange)
+        : labelRange(labelRange)
+    {
+        int labelCount = s.size();
+
+        double step = (labelRange.second - labelRange.first) / (labelCount - 1);
+        double l = labelRange.first;
+        for (int i = 0; i!= labelCount; i++) {
+            graphAndLabels.append({l, s[i]});
+            l += step;
+        }
+    }
+
+    ~DataUpdater()
+    {
+        qDebug() << "DataUpdate deconstructed";
+    }
 
     void operator ()(QVariantList data)
     {
-        for (auto graph : series) {
-            graph->clearData();
+        for (auto item : graphAndLabels) {
+            item.second->clearData();
         }
 
         for (auto item : data) {
             auto point = item.toList();
             auto z = point[1].toDouble();
             QCPGraph *graph;
-            for (int i = 0; i!= TotalClassLabel; i++) {
-                if (qFuzzyCompare(z, labels[i])) {
-                    graph = series[i];
+            for (auto item : graphAndLabels) {
+                if (qFuzzyCompare(z, item.first)) {
+                    graph = item.second;
                     break;
                 }
             }
@@ -934,53 +925,98 @@ public:
                 graph->addData(point[0].toDouble(), point[2].toDouble());
             }
         }
-        if (!series.isEmpty()) {
+        if (!graphAndLabels.isEmpty()) {
             // only need to request replot on one graph
-            series[0]->parentPlot()->replot();
+            graphAndLabels[0].second->parentPlot()->replot();
         }
     }
 };
 
-void MainWindow::setupTrainingGraph(QCustomPlot *plot)
+void MainWindow::setupTrainingGraph(QCustomPlot *plot, range outputRange, int labelsCount)
 {
-    const QColor colors[TotalClassLabel] = { Qt::blue, Qt::red };
+    const int ColorCount = 2;
+    const QColor colors[ColorCount] = { Qt::blue, Qt::red };
 
     QPen pen;
     QList<QCPGraph *> series;
-    series.reserve(TotalClassLabel);
-    for (int i = 0; i!= TotalClassLabel; i++)
+    series.reserve(labelsCount);
+    for (int i = 0; i!= labelsCount; i++)
     {
         auto graph = plot->addGraph();
         graph->setLineStyle(QCPGraph::lsNone);
         graph->setScatterStyle(QCPScatterStyle::ssCircle);
-        pen.setColor(colors[i]);
+        pen.setColor(colors[i%ColorCount]);
         graph->setPen(pen);
         series.append(graph);
     }
-    // connect to data change signal
+
+    // try disconnect from any previous signal first
+    disconnect(handler.get(), &UIHandler::trainingDataUpdated, nullptr, nullptr);
+
     connect(handler.get(), &UIHandler::trainingDataUpdated,
-            DataUpdater(series));
+            DataUpdater(series, outputRange));
 }
 
-void MainWindow::setupTestingGraph(QCustomPlot *plot)
+void MainWindow::setupTestingGraph(QCustomPlot *plot, range outputRange, int labelsCount)
 {
-    const QColor colors[TotalClassLabel] = { Qt::blue, Qt::red };
+    const int ColorCount = 2;
+    const QColor colors[ColorCount] = { Qt::blue, Qt::red };
 
     QPen pen;
     QList<QCPGraph *> series;
-    series.reserve(TotalClassLabel);
-    for (int i = 0; i!= TotalClassLabel; i++)
+    series.reserve(labelsCount);
+    for (int i = 0; i!= labelsCount; i++)
     {
         auto graph = plot->addGraph();
         graph->setLineStyle(QCPGraph::lsNone);
         graph->setScatterStyle(QCPScatterStyle::ssTriangle);
-        pen.setColor(colors[i]);
+        pen.setColor(colors[i%ColorCount]);
         graph->setPen(pen);
         series.append(graph);
     }
-    // connect to data change signal
+
+    // try disconnect from any previous signal first
+    disconnect(handler.get(), &UIHandler::testingDataUpdated, nullptr, nullptr);
+
     connect(handler.get(), &UIHandler::testingDataUpdated,
-            DataUpdater(series));
+            DataUpdater(series, outputRange));
+}
+
+void MainWindow::setupProblemPlane(QCustomPlot *plot)
+{
+    // configure axis rect:
+    plot->setInteractions(QCP::iRangeDrag|QCP::iRangeZoom); // this will also allow rescaling the color scale by dragging/zooming
+    plot->axisRect()->setupFullAxesBox(true);
+    plot->xAxis->setLabel("x");
+    plot->yAxis->setLabel("y");
+
+    // add predict map and its color scale
+    auto scale = createPredictColorScale(plot);
+    plot->plotLayout()->addElement(0, 1, scale);
+
+    predictMap = createPredictMap(plot->xAxis, plot->yAxis, scale);
+    plot->addPlottable(predictMap);
+
+    // postpone two scatters setup to after applying options
+    connect(handler.get(), &UIHandler::inputRangeUpdated,
+            this, [=](auto min, auto max){
+        qDebug() << "Input range update to (" << min << "," << max << ")";
+        QCPRange range(min, max);
+        predictMap->data()->setRange(range, range);
+        plot->rescaleAxes();
+    });
+
+    connect(handler.get(), &UIHandler::outputRangeUpdated,
+            this, [=](auto min, auto max, auto labelsCount){
+        qDebug() << "Onput range update to (" << min << "," << max << ") x" << labelsCount;
+        // set prediction map data range
+        scale->setDataRange(QCPRange(min, max));
+
+        // (re)setup scatters
+        plot->clearGraphs();
+        setupTrainingGraph(plot, {min, max}, labelsCount);
+        setupTestingGraph(plot, {min, max}, labelsCount);
+    });
 }
 
 void MainWindow::setupErrorLine(QCustomPlot *plot)

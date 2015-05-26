@@ -6,6 +6,7 @@
 #include <QObject>
 #include <QVariantList>
 #include <memory>
+#include <utility>
 
 namespace OpenANN {
 class DirectStorageDataSet;
@@ -15,6 +16,8 @@ using OpenANN::DataSet;
 using OpenANN::DirectStorageDataSet;
 using OpenANN::Learner;
 using std::unique_ptr;
+using std::pair;
+using range = pair<double, double>;
 
 class UCWDataSet : public QObject, public DataSet
 {
@@ -37,6 +40,10 @@ public:
 
     void inTrainingMode(bool val);
     bool inTrainingMode() const;
+
+    range inputRange() const;
+    range outputRange() const;
+    int outputLabelCount() const;
 
     /**
      * Creates moon shape dataset that form two classes.
@@ -80,5 +87,8 @@ private:
     MatrixXd testingOut;
     unique_ptr<DirectStorageDataSet> trainingData;
     unique_ptr<DirectStorageDataSet> testingData;
+    range inputRange_;
+    range outputRange_;
+    int outputLabelCount_;
 };
 #endif // DATASET_H_

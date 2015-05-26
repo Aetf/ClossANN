@@ -43,6 +43,8 @@ signals:
     void trainingDataUpdated(QVariantList data);
     void testingDataUpdated(QVariantList data);
     void iterationFinished(LearnTask *task, int iter, double error);
+    void inputRangeUpdated(double min, double max);
+    void outputRangeUpdated(double min, double max, int labelsCount);
 
 protected slots:
     void onTrainingFinished();
@@ -52,6 +54,8 @@ protected slots:
 private:
     void sendTrainingDataUpdated();
     void sendTestingDataUpdated();
+    void sendInputRangeUpdated();
+    void sendOutputRangeUpdated();
 
     // multi-threading
     QReadWriteLock lockForCancelFlag;

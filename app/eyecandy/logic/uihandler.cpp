@@ -56,9 +56,11 @@ void UIHandler::configure(const LearnParam &param)
 
     configured_ = true;
 
-    requestPrediction(false);
+    sendInputRangeUpdated();
+    sendOutputRangeUpdated();
     sendTrainingDataUpdated();
     sendTestingDataUpdated();
+    requestPrediction(false);
 }
 
 bool UIHandler::configured() const
@@ -210,4 +212,18 @@ void UIHandler::sendTestingDataUpdated()
 {
     if (!configured_) return;
     emit testingDataUpdated(getTestingSet());
+}
+
+void UIHandler::sendInputRangeUpdated()
+{
+    if (!configured_) return;
+    emit inputRangeUpdated(task->data().inputRange().first, task->data().inputRange().second);
+}
+
+void UIHandler::sendOutputRangeUpdated()
+{
+    if (!configured_) return;
+    emit outputRangeUpdated(task->data().outputRange().first,
+                            task->data().outputRange().second,
+                            task->data().outputLabelCount());
 }
