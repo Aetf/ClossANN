@@ -38,8 +38,6 @@ public:
     void inTrainingMode(bool val);
     bool inTrainingMode() const;
 
-    void requestPrediction();
-
     /**
      * Creates moon shape dataset that form two classes.
      *
@@ -69,14 +67,12 @@ public:
     void generateTwoSpirals(int density, double maxDiameter);
 
 signals:
-    void predictionUpdated(QVariantList);
 
 protected:
     DirectStorageDataSet &dataSet();
     void dispose();
 
 private:
-    bool predictionInRequest;
     bool inTrainingMode_;
     MatrixXd trainingIn;
     MatrixXd trainingOut;

@@ -12,7 +12,6 @@ using Eigen::VectorXd;
 
 UCWDataSet::UCWDataSet(DataSource source, int density, double maxDiameter)
     : DataSet()
-    , predictionInRequest(false)
     , inTrainingMode_(true)
     , trainingIn()
     , trainingOut()
@@ -67,26 +66,6 @@ Eigen::VectorXd& UCWDataSet::getTarget(int i)
 
 void UCWDataSet::finishIteration(Learner& learner)
 {
-    if (predictionInRequest)
-    {
-        predictionInRequest = false;
-        QVariantList prediction;
-        for(int x = 0; x < 30; x++)
-        {
-            for(int y = 0; y < 30; y++)
-            {
-                double xx = x / 30.0;
-                double yy = y / 30.0;
-                Eigen::VectorXd in(2);
-                in << xx, yy;
-                Eigen::VectorXd out = learner(in);
-                QVariantList point;
-                point << xx << out(0, 0) << yy;
-                prediction << QVariant(point);
-            }
-        }
-        emit predictionUpdated(prediction);
-    }
 }
 
 bool UCWDataSet::inTrainingMode() const
@@ -97,11 +76,6 @@ bool UCWDataSet::inTrainingMode() const
 void UCWDataSet::inTrainingMode(bool val)
 {
     inTrainingMode_ = val;
-}
-
-void UCWDataSet::requestPrediction()
-{
-    predictionInRequest = true;
 }
 
 void UCWDataSet::generateTwoSpirals(int density, double maxDiameter)

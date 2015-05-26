@@ -13,6 +13,7 @@
 #include <qcustomplot.h>
 #include "logic/uihandler.h"
 #include "models/layerdescmodel.h"
+#include "models/learntask.h"
 #include "widgets/layerdelegate.h"
 #include "utils.h"
 #include "QtAwesome.h"
@@ -23,6 +24,7 @@ MainWindow::MainWindow(QWidget *parent)
     , ui(new Ui::MainWindow)
     , handler(new UIHandler)
     , awesome(new QtAwesome)
+    , layersModel(nullptr)
     , predictMap(nullptr)
     , trainingGraph(nullptr)
     , testingGraph(nullptr)
@@ -34,6 +36,12 @@ MainWindow::MainWindow(QWidget *parent)
 
     setupPlayground();
 
+    connect(handler.get(), &UIHandler::iterationFinished,
+            this, &MainWindow::onTrainIterationFinished);
+    connect(&predictionTimer, &QTimer::timeout,
+            handler.get(),&UIHandler::requestPredictionAsync);
+
+    // for testing
     ui->tabs->setUpdatesEnabled(false);
     for (int i = 1; i!= 8; i++) {
         auto plot = new QCustomPlot;
@@ -70,7 +78,7 @@ void MainWindow::setupOptionPage()
         this->currentParam.pValue(value);
     });
 
-    auto layersModel = new LayerDescModel(this);
+    layersModel = new LayerDescModel(this);
     ui->tableNetStru->setModel(layersModel);
     ui->tableNetStru->setItemDelegate(new LayerDelegate(this));
     ui->tableNetStru->setSelectionMode(QAbstractItemView::SingleSelection);
@@ -90,17 +98,20 @@ void MainWindow::setupOptionPage()
         layersModel->removeRows(pos, 1);
     });
     connect(ui->btnApplyConfig, &QPushButton::clicked,
-            this, [=]{
-        LearnParam param(ui->spinLearnRate->value(),
-                         ui->spinKernelSize->value(),
-                         ui->spinPValue->value());
-        param.layers(layersModel->layers());
-
-        handler->configure(param);
-    });
+            this, &MainWindow::applyOptions);
 
     displayDefaultOptions();
     ui->tableNetStru->selectRow(0);
+}
+
+void MainWindow::applyOptions()
+{
+    LearnParam param(ui->spinLearnRate->value(),
+                     ui->spinKernelSize->value(),
+                     ui->spinPValue->value());
+    param.layers(layersModel->layers());
+
+    handler->configure(param);
 }
 
 void MainWindow::displayDefaultOptions()
@@ -109,13 +120,12 @@ void MainWindow::displayDefaultOptions()
     ui->spinKernelSize->setValue(param.kernelSize());
     ui->spinLearnRate->setValue(param.learningRate());
     ui->spinPValue->setValue(param.pValue());
-    auto model = ui->tableNetStru->model();
-    model->removeRows(0, model->rowCount());
-    model->insertRows(0, param.layers().size());
+    layersModel->removeRows(0, layersModel->rowCount());
+    layersModel->insertRows(0, param.layers().size());
     for (int i = 0; i!= param.layers().size(); i++) {
         QVariant v;
         v.setValue(param.layers()[i]);
-        model->setData(model->index(i, 0), v, LayerDescModel::LayerDataRole);
+        layersModel->setData(layersModel->index(i, 0), v, LayerDescModel::LayerDataRole);
     }
 }
 
@@ -735,31 +745,26 @@ void MainWindow::setupAdvancedAxesDemo(QCustomPlot *customPlot)
 
 void MainWindow::trainClossNN()
 {
-    connect(handler.get(), &UIHandler::iterationFinished,
-            this, &MainWindow::onTrainIterationFinished);
-    auto h = handler.get();
-    connect(&dataTimer, &QTimer::timeout,
-            this, [h] {
-        h->requestPrediction();
-    });
-    handler->configure(LearnParam());
+    if (!handler->configured()) {
+        applyOptions();
+    }
     handler->runAsync();
-    dataTimer.start(200);
+    predictionTimer.start(200);
 }
 
-void MainWindow::onTrainIterationFinished(int iter, double error)
+void MainWindow::onTrainIterationFinished(LearnTask *, int iter, double error)
 {
-//    static double start = QDateTime::currentDateTime().toMSecsSinceEpoch()/1000.0;
-//    double key = QDateTime::currentDateTime().toMSecsSinceEpoch()/1000.0;
-//    key -= start;
     ui->plotErrorLine->graph(0)->addData(iter, error);
+
     // remove data of lines that's outside visible range:
 //    ui->plotColorMap->graph(0)->removeDataBefore(key-8);
+
     // rescale value (vertical) axis to fit the current data:
     ui->plotErrorLine->graph(0)->rescaleValueAxis();
 
     // make key axis range scroll with the data (at a constant range size of 8):
 //    ui->plotErrorLine->xAxis->setRange(key+0.25, 8, Qt::AlignRight);
+
     ui->plotErrorLine->xAxis->rescale();
     ui->plotErrorLine->replot();
 }
@@ -905,7 +910,6 @@ public:
             auto z = point[1].toDouble();
             QCPGraph *graph;
             for (int i = 0; i!= TotalClassLabel; i++) {
-                qDebug() << "z =" << z << "label is" << labels[i];
                 if (qFuzzyCompare(z, labels[i])) {
                     graph = series[i];
                     break;
@@ -972,9 +976,6 @@ void MainWindow::setupErrorLine(QCustomPlot *plot)
     graph->setAntialiasedFill(false);
 
     plot->axisRect()->setupFullAxesBox();
-    // make left and bottom axes transfer their ranges to right and top axes:
-//    connect(plot->xAxis, SIGNAL(rangeChanged(QCPRange)), plot->xAxis2, SLOT(setRange(QCPRange)));
-//    connect(plot->yAxis, SIGNAL(rangeChanged(QCPRange)), plot->yAxis2, SLOT(setRange(QCPRange)));
 }
 
 MainWindow::~MainWindow()

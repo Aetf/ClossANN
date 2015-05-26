@@ -30,8 +30,10 @@ public slots:
     void terminateTraining();
     void configure(const LearnParam &param);
     void dispose();
-    void test();
-    void requestPrediction();
+    void requestPrediction(bool async = true);
+    void requestPredictionAsync();
+
+    bool configured() const;
 
     QVariantList getTrainingSet();
     QVariantList getTestingSet();
@@ -40,10 +42,12 @@ signals:
     void predictionUpdated(QVariantList data);
     void trainingDataUpdated(QVariantList data);
     void testingDataUpdated(QVariantList data);
-    void iterationFinished(int iter, double error);
+    void iterationFinished(LearnTask *task, int iter, double error);
 
 protected slots:
     void onTrainingFinished();
+    void onIterationFinished();
+    void generatePrediction(Learner& learner);
 
 private:
     void sendTrainingDataUpdated();
@@ -52,10 +56,11 @@ private:
     // multi-threading
     QReadWriteLock lockForCancelFlag;
     bool cancelFlag;
+    bool predictionInRequest;
     bool running;
 
     // neural network related
-    bool configured;
+    bool configured_;
     LearnTask *task;
 
     // async task handling

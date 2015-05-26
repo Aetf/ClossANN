@@ -11,6 +11,8 @@ namespace Ui {
 class MainWindow;
 }
 class UIHandler;
+class LearnTask;
+class LayerDescModel;
 class QCustomPlot;
 class QCPAxis;
 class QCPColorMap;
@@ -47,6 +49,7 @@ protected:
     void setupToolbar();
     void setupOptionPage();
     void displayDefaultOptions();
+    void applyOptions();
 
     void trainClossNN();
 
@@ -60,7 +63,7 @@ private slots:
     void screenShot();
     void updateButtons(const QModelIndex &curr, const QModelIndex &prev);
 
-    void onTrainIterationFinished(int iter, double error);
+    void onTrainIterationFinished(LearnTask *task, int iter, double error);
 
 private:
     unique_ptr<Ui::MainWindow> ui;
@@ -68,11 +71,12 @@ private:
     unique_ptr<UIHandler> handler;
     unique_ptr<QtAwesome> awesome;
 
+    LayerDescModel *layersModel;
     QCPColorMap *predictMap;
     QCPGraph *trainingGraph;
     QCPGraph *testingGraph;
     QString demoName;
-    QTimer dataTimer;
+    QTimer predictionTimer;
     QTimer dataTimer2;
     QCustomPlot *bracketPlot;
     QCPItemTracer *itemDemoPhaseTracer;

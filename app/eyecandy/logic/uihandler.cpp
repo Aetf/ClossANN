@@ -17,10 +17,13 @@ using namespace OpenANN;
 UIHandler::UIHandler(QObject *parent)
     : QObject(parent)
     , cancelFlag(false)
+    , predictionInRequest(false)
     , running(false)
-    , configured(false)
+    , configured_(false)
     , task(nullptr)
 {
+    connect(this, &UIHandler::iterationFinished,
+            this, &UIHandler::onIterationFinished);
     connect(&futureWatcher, &QFutureWatcher<void>::finished,
             this, &UIHandler::onTrainingFinished);
 }
@@ -34,7 +37,7 @@ void UIHandler::dispose()
 {
     delete task;
     task = nullptr;
-    configured = false;
+    configured_ = false;
 }
 
 QObject *UIHandler::UIHandlerProvider(QQmlEngine *engine, QJSEngine *scriptEngine)
@@ -46,21 +49,25 @@ QObject *UIHandler::UIHandlerProvider(QQmlEngine *engine, QJSEngine *scriptEngin
 
 void UIHandler::configure(const LearnParam &param)
 {
-    if (configured) dispose();
+    if (configured_) dispose();
 
     task = new LearnTask(param);
-    connect(&task->data(), &UCWDataSet::predictionUpdated,
-            this, &UIHandler::predictionUpdated);
 
-    configured = true;
+    configured_ = true;
 
+    requestPrediction(false);
     sendTrainingDataUpdated();
     sendTestingDataUpdated();
 }
 
+bool UIHandler::configured() const
+{
+    return configured_;
+}
+
 void UIHandler::runAsync()
 {
-    if (!configured) return;
+    if (!configured_) return;
     if (running) return;
 
     running = true;
@@ -70,7 +77,7 @@ void UIHandler::runAsync()
 
 void UIHandler::run()
 {
-    if (!configured) return;
+    if (!configured_) return;
 
 //    train(task->network(), "LMA", MSE, task->stopCriteria(), true);
 
@@ -87,7 +94,7 @@ void UIHandler::run()
         OPENANN_DEBUG << "Iteration #" << opt.currentIteration()
                       << ", training error = "
                       << OpenANN::FloatingPointFormatter(opt.currentError(), 4);
-        emit iterationFinished(opt.currentIteration(), opt.currentError());
+        emit iterationFinished(task, opt.currentIteration(), opt.currentError());
 //        {
 //            QReadLocker locker(&lockForCancelFlag);
 //            if(cancelFlag) break;
@@ -98,15 +105,25 @@ void UIHandler::run()
 
 void UIHandler::terminateTraining()
 {
-    if (!configured) return;
+    if (!configured_) return;
     QWriteLocker locker(&lockForCancelFlag);
     cancelFlag = true;
 }
 
-void UIHandler::requestPrediction()
+void UIHandler::requestPrediction(bool async)
 {
-    if (!configured) return;
-    task->data().requestPrediction();
+    if (!configured_) return;
+
+    if (async) {
+        predictionInRequest = true;
+    } else {
+        generatePrediction(task->network());
+    }
+}
+
+void UIHandler::requestPredictionAsync()
+{
+    requestPrediction(true);
 }
 
 QVariantList UIHandler::getTrainingSet()
@@ -155,38 +172,39 @@ void UIHandler::onTrainingFinished()
     running = false;
 }
 
-void UIHandler::test()
+void UIHandler::onIterationFinished()
 {
-    static bool odd = true;
-    const int MM = 10;
-    QVariantList thePrediction;
-    for(int x = 0; x < MM; x++)
+    generatePrediction(task->network());
+}
+
+void UIHandler::generatePrediction(Learner& learner)
+{
+    QVariantList prediction;
+    for(int x = 0; x < 30; x++)
     {
-        for(int y = 0; y < MM; y++)
+        for(int y = 0; y < 30; y++)
         {
+            double xx = x / 30.0;
+            double yy = y / 30.0;
+            Eigen::VectorXd in(2);
+            in << xx, yy;
+            Eigen::VectorXd out = learner(in);
             QVariantList point;
-            point << x / (double) MM;
-            if(odd) {
-                point << (y%2 != 0? -0.8 : 0.8);
-            } else {
-                point << (y%2 == 0? -0.8 : 0.8);
-            }
-            point << y / (double) MM;
-            thePrediction << QVariant(point);
+            point << xx << out(0, 0) << yy;
+            prediction << QVariant(point);
         }
     }
-    odd = !odd;
-    emit predictionUpdated(thePrediction);
+    emit predictionUpdated(prediction);
 }
 
 void UIHandler::sendTrainingDataUpdated()
 {
-    if (!configured) return;
+    if (!configured_) return;
     emit trainingDataUpdated(getTrainingSet());
 }
 
 void UIHandler::sendTestingDataUpdated()
 {
-    if (!configured) return;
+    if (!configured_) return;
     emit testingDataUpdated(getTestingSet());
 }
