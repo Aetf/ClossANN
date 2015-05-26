@@ -4,7 +4,6 @@
 #include <QQuickView>
 #include <QStyle>
 #include <QtQml>
-#include "models/recordsmodel.h"
 #include "logic/uihandler.h"
 
 #ifdef QCUSTOMPLOT_USE_LIBRARY
@@ -62,10 +61,6 @@ int runQtQuick(int argc, char *argv[])
 
 void registerRecordsModel()
 {
-    qmlRegisterUncreatableType<ColumnRoles>("RecordsModel", 1, 0, "ColumnRoles",
-                                            "Uncreatable object, provide enums only");
-    qmlRegisterType<RecordsModel>("RecordsModel", 1, 0, "RecordsModel");
-
     qmlRegisterSingletonType<UIHandler>("UCWNeuralNet", 1, 0, "Handler",
                                         UIHandler::UIHandlerProvider);
 }
