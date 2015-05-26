@@ -2,10 +2,10 @@
 #define LEARNTASK_H
 
 #include "utils.h"
+#include "models/learnparam.h"
 
 class ClossNet;
 class UCWDataSet;
-class LearnParam;
 namespace OpenANN {
 class StoppingCriteria;
 }
@@ -21,6 +21,8 @@ public:
     StoppingCriteria &stopCriteria();
     UCWDataSet &data();
 
+    const LearnParam &parameters() const;
+
 protected:
     UCWDataSet *createDataSourceFromParam(const LearnParam &param);
 
@@ -28,6 +30,8 @@ private:
     unique_ptr<ClossNet> network_;
     unique_ptr<StoppingCriteria> stopCriteria_;
     unique_ptr<UCWDataSet> data_;
+
+    LearnParam param_;
 };
 
 #endif // LEARNTASK_H

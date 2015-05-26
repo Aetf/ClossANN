@@ -1,8 +1,10 @@
 [x] show prediction plane immediately after net init (not necessarily in training)
-[ ] Save info about each run
+[x] ~~Save random seed about each run~~
+[x] Make random seed an option
 [ ] More data source
 [ ] options to select different data
 [ ] implement variable learning rate
+[ ] Save result about each run
 [ ] toggle training and testing data display
 [x] show training and testing data when not training
 [ ] Integer x axis in error line

@@ -23,4 +23,6 @@ template<typename... Args> struct Select {
     }
 };
 
+unsigned int get_seed();
+
 #endif // UTILS_H

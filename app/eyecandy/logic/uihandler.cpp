@@ -6,6 +6,7 @@
 #include "models/ucwdataset.h"
 #include <OpenANN/OpenANN>
 #include <OpenANN/io/Logger.h>
+#include <OpenANN/util/Random.h>
 #include <QFuture>
 #include <QtConcurrent/QtConcurrent>
 #include <QVariantMap>
@@ -79,9 +80,11 @@ void UIHandler::run()
 {
     if (!configured_) return;
 
-//    train(task->network(), "LMA", MSE, task->stopCriteria(), true);
-
+    // set random seed
+    RandomNumberGenerator().seed(task->parameters().randSeed());
+    // ensure data is in training mode before initialize
     task->data().inTrainingMode(true);
+
     task->network().initialize();
 
     InterruptableLMA opt;

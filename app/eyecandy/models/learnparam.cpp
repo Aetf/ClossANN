@@ -1,11 +1,13 @@
 #include "learnparam.h"
 #include <QDebug>
+#include "utils.h"
 
 LearnParam::LearnParam(double learnRate, double kernelSize, double pValue)
     : dataSource_(TwoSprial)
     , learningRate_(learnRate)
     , kernelSize_(kernelSize)
     , pValue_(pValue)
+    , randSeed_(get_seed())
 {
     stoppingCriteria_.maximalIterations = 10000;
     layers_ << LayerDesc{LayerDesc::Input, 0, LayerDesc::LINEAR} // Input
@@ -20,9 +22,10 @@ double LearnParam::learningRate() const
     return learningRate_;
 }
 
-void LearnParam::learningRate(double value)
+LearnParam &LearnParam::learningRate(double value)
 {
     learningRate_ = value;
+    return *this;
 }
 
 double LearnParam::kernelSize() const
@@ -30,9 +33,10 @@ double LearnParam::kernelSize() const
     return kernelSize_;
 }
 
-void LearnParam::kernelSize(double value)
+LearnParam &LearnParam::kernelSize(double value)
 {
     kernelSize_ = value;
+    return *this;
 }
 
 double LearnParam::pValue() const
@@ -40,9 +44,21 @@ double LearnParam::pValue() const
     return pValue_;
 }
 
-void LearnParam::pValue(double value)
+LearnParam &LearnParam::pValue(double value)
 {
     pValue_ = value;
+    return *this;
+}
+
+unsigned int LearnParam::randSeed() const
+{
+    return randSeed_;
+}
+
+LearnParam &LearnParam::randSeed(unsigned int seed)
+{
+    randSeed_ = seed;
+    return *this;
 }
 
 LearnParam::DataSource LearnParam::dataSource() const
@@ -50,9 +66,10 @@ LearnParam::DataSource LearnParam::dataSource() const
     return dataSource_;
 }
 
-void LearnParam::dataSource(DataSource source)
+LearnParam &LearnParam::dataSource(DataSource source)
 {
     dataSource_ = source;
+    return *this;
 }
 
 const StoppingCriteria &LearnParam::stoppingCriteria() const
@@ -60,9 +77,10 @@ const StoppingCriteria &LearnParam::stoppingCriteria() const
     return stoppingCriteria_;
 }
 
-void LearnParam::stoppingCriteria(const StoppingCriteria &criteria)
+LearnParam &LearnParam::stoppingCriteria(const StoppingCriteria &criteria)
 {
     stoppingCriteria_ = criteria;
+    return *this;
 }
 
 const QList<LayerDesc> &LearnParam::layers() const

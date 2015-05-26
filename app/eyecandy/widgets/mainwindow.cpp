@@ -1,5 +1,7 @@
 #include "mainwindow.h"
 #include "ui_mainwindow.h"
+#include <ctime>
+#include <sstream>
 #include <QDebug>
 #include <QAction>
 #include <QDesktopWidget>
@@ -11,6 +13,7 @@
 #include <QMessageBox>
 #include <QMetaEnum>
 #include <qcustomplot.h>
+#include <OpenANN/util/Random.h>
 #include "logic/uihandler.h"
 #include "models/layerdescmodel.h"
 #include "models/learntask.h"
@@ -18,6 +21,9 @@
 #include "utils.h"
 #include "QtAwesome.h"
 #include "columnresizer.h"
+
+using std::ostringstream;
+using std::istringstream;
 
 MainWindow::MainWindow(QWidget *parent)
     : QMainWindow(parent)
@@ -99,6 +105,10 @@ void MainWindow::setupOptionPage()
     });
     connect(ui->btnApplyConfig, &QPushButton::clicked,
             this, &MainWindow::applyOptions);
+    connect(ui->btnRefreshSeed, &QPushButton::clicked,
+            this, [=]{
+        ui->lineRandSeed->setText(QString::number(get_seed()));
+    });
 
     displayDefaultOptions();
     ui->tableNetStru->selectRow(0);
@@ -106,9 +116,11 @@ void MainWindow::setupOptionPage()
 
 void MainWindow::applyOptions()
 {
-    LearnParam param(ui->spinLearnRate->value(),
-                     ui->spinKernelSize->value(),
-                     ui->spinPValue->value());
+    auto param = LearnParam()
+                    .learningRate(ui->spinLearnRate->value())
+                    .kernelSize(ui->spinKernelSize->value())
+                    .pValue(ui->spinPValue->value())
+                    .randSeed(ui->lineRandSeed->text().toUInt());
     param.layers(layersModel->layers());
 
     handler->configure(param);
@@ -120,6 +132,9 @@ void MainWindow::displayDefaultOptions()
     ui->spinKernelSize->setValue(param.kernelSize());
     ui->spinLearnRate->setValue(param.learningRate());
     ui->spinPValue->setValue(param.pValue());
+
+    ui->lineRandSeed->setText(QString::number(param.randSeed()));
+
     layersModel->removeRows(0, layersModel->rowCount());
     layersModel->insertRows(0, param.layers().size());
     for (int i = 0; i!= param.layers().size(); i++) {

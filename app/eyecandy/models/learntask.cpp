@@ -1,5 +1,4 @@
 #include "learntask.h"
-#include "models/learnparam.h"
 #include "models/ucwdataset.h"
 #include "ClossNet.h"
 #include "OpenANN/OpenANN"
@@ -8,6 +7,9 @@ using namespace OpenANN;
 
 LearnTask::LearnTask(const LearnParam &param)
 {
+    // save param in case later use
+    param_ = param;
+
     // Step 1. setup stopping criteria
     stopCriteria_ = make_unique(new StoppingCriteria(param.stoppingCriteria()));
 
@@ -64,4 +66,9 @@ StoppingCriteria &LearnTask::stopCriteria()
 UCWDataSet &LearnTask::data()
 {
     return *data_;
+}
+
+const LearnParam &LearnTask::parameters() const
+{
+    return param_;
 }

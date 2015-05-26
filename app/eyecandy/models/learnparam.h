@@ -42,13 +42,16 @@ public:
     LearnParam(double learningRate = 1, double kernelSize = 0.5, double pValue = 2);
 
     double learningRate() const;
-    void learningRate(double value);
+    LearnParam& learningRate(double value);
 
     double kernelSize() const;
-    void kernelSize(double value);
+    LearnParam& kernelSize(double value);
 
     double pValue() const;
-    void pValue(double value);
+    LearnParam& pValue(double value);
+
+    unsigned int randSeed() const;
+    LearnParam& randSeed(unsigned int seed);
 
     /**
      * The last element in list is used as output layer, whose nUnit is determined by input dataset,
@@ -60,10 +63,10 @@ public:
     void layers(const QList<LayerDesc> &l);
 
     DataSource dataSource() const;
-    void dataSource(DataSource source);
+    LearnParam& dataSource(DataSource source);
 
     const StoppingCriteria &stoppingCriteria() const;
-    void stoppingCriteria(const StoppingCriteria &criteria);
+    LearnParam& stoppingCriteria(const StoppingCriteria &criteria);
 
     void ensureHasOutputLayer();
 
@@ -77,6 +80,7 @@ private:
     double learningRate_;
     double kernelSize_;
     double pValue_;
+    unsigned int randSeed_;
     QList<LayerDesc> layers_;
 };
 
