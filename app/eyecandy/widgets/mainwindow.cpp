@@ -18,7 +18,7 @@
 #include "models/layerdescmodel.h"
 #include "models/learntask.h"
 #include "widgets/layerdelegate.h"
-#include "utils.h"
+#include "utils/utils.h"
 #include "QtAwesome.h"
 #include "columnresizer.h"
 

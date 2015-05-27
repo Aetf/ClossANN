@@ -1,6 +1,6 @@
 #include "learnparam.h"
 #include <QDebug>
-#include "utils.h"
+#include "utils/utils.h"
 
 LearnParam::LearnParam(double learnRate, double kernelSize, double pValue)
     : dataSource_(TwoSprial)

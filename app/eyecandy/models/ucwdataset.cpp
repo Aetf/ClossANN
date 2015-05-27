@@ -1,5 +1,5 @@
 #include "ucwdataset.h"
-#include "utils.h"
+#include "utils/utils.h"
 #include <OpenANN/Learner.h>
 #include <OpenANN/Preprocessing.h>
 #include <OpenANN/util/AssertionMacros.h>

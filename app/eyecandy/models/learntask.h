@@ -1,7 +1,7 @@
 #ifndef LEARNTASK_H
 #define LEARNTASK_H
 
-#include "utils.h"
+#include "utils/utils.h"
 #include "models/learnparam.h"
 
 class ClossNet;
