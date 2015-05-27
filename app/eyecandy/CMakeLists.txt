@@ -25,8 +25,6 @@ if(QCustomPlot_FOUND)
     include_directories(${QCustomPlot_INCLUDE_DIRS})
 endif()
 
-
-
 # collect all cpp files
 aux_source_directory(. SRC_LIST)
 aux_source_directory(logic SRC_LIST)
@@ -42,6 +40,8 @@ list(APPEND SRC_LIST res/qml.qrc)
 include(libs/UseQtAwesome.cmake)
 # use ColumnResizer
 include(libs/UseColumnResizer.cmake)
+# use FastCppCsvParser
+include(libs/UseFastCppCsvParser.cmake)
 
 add_compile_options(${CLOSS_COMPILER_FLAGS})
 add_executable(${PROJECT_NAME} ${SRC_LIST})

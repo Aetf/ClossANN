@@ -4,3 +4,6 @@
 [submodule "app/eyecandy/libs/columnresizer"]
 	path = app/eyecandy/libs/columnresizer
 	url = https://github.com/agateau/columnresizer.git
+[submodule "app/eyecandy/libs/fast-cpp-csv-parser"]
+	path = app/eyecandy/libs/fast-cpp-csv-parser
+	url = https://github.com/ben-strasser/fast-cpp-csv-parser.git
