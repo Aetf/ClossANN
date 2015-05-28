@@ -20,7 +20,6 @@ class QCPColorMap;
 class QCPColorScale;
 class QCPGraph;
 class QCPItemTracer;
-class QtAwesome;
 class ColumnResizer;
 
 using std::unique_ptr;
@@ -42,13 +41,15 @@ public:
     void setupStyledDemo(QCustomPlot *customPlot);
     void setupAdvancedAxesDemo(QCustomPlot *customPlot);
 
-    void setupPlayground();
     void setupProblemPlane(QCustomPlot *plot);
     void setupErrorLine(QCustomPlot *plot);
 
 protected:
     void setupToolbar();
     void setupOptionPage();
+    void setupMonitorPage();
+    void setupLogPage();
+
     void displayDefaultOptions();
     void applyOptions();
 
@@ -70,7 +71,6 @@ private:
     unique_ptr<Ui::MainWindow> ui;
 
     unique_ptr<UIHandler> handler;
-    unique_ptr<QtAwesome> awesome;
 
     LayerDescModel *layersModel;
     QCPColorMap *predictMap;

@@ -1,7 +1,6 @@
 #include "mainwindow.h"
 #include "ui_mainwindow.h"
 #include <ctime>
-#include <sstream>
 #include <QDebug>
 #include <QAction>
 #include <QDesktopWidget>
@@ -20,34 +19,33 @@
 #include "models/layerdescmodel.h"
 #include "models/learntask.h"
 #include "widgets/layerdelegate.h"
+#include "widgets/loglistwidget.h"
 #include "utils/utils.h"
-#include "QtAwesome.h"
+#include "utils/awesomeiconprovider.h"
+#include "utils/logger.h"
 #include "columnresizer.h"
-
-using std::ostringstream;
-using std::istringstream;
 
 MainWindow::MainWindow(QWidget *parent)
     : QMainWindow(parent)
     , ui(new Ui::MainWindow)
     , handler(new UIHandler)
-    , awesome(new QtAwesome)
     , layersModel(nullptr)
     , predictMap(nullptr)
     , trainingGraph(nullptr)
     , testingGraph(nullptr)
 {
-    awesome->initFontAwesome();
     ui->setupUi(this);
     setupToolbar();
     setupOptionPage();
-
-    setupPlayground();
+    setupMonitorPage();
+    setupLogPage();
 
     connect(handler.get(), &UIHandler::iterationFinished,
             this, &MainWindow::onTrainIterationFinished);
     connect(&predictionTimer, &QTimer::timeout,
             handler.get(),&UIHandler::requestPredictionAsync);
+
+    Logger::normal() << "窗口初始化完成";
 
     // for testing
     ui->tabs->setUpdatesEnabled(false);
@@ -61,7 +59,7 @@ MainWindow::MainWindow(QWidget *parent)
 
 void MainWindow::setupToolbar()
 {
-    ui->actionTrain->setIcon(awesome->icon(fa::play));
+    ui->actionTrain->setIcon(AwesomeIconProvider::instance()->icon(fa::play));
     connect(ui->actionTrain, &QAction::triggered,
             this, &MainWindow::trainClossNN);
     ui->toolBar->addAction(ui->actionTrain);
@@ -73,35 +71,35 @@ void MainWindow::setupOptionPage()
     colResizer->addWidgetsFromLayout(ui->groupNet->layout(), 0);
     colResizer->addWidgetsFromLayout(ui->groupCloss->layout(), 0);
     colResizer->addWidgetsFromLayout(ui->groupData->layout(), 0);
-    
+
     // Group Net
-    ui->btnRefreshSeed->setIcon(awesome->icon(fa::refresh));
+    ui->btnRefreshSeed->setIcon(AwesomeIconProvider::instance()->icon(fa::refresh));
     connect(ui->spinLearnRate, Select<double>::OverloadOf(&QDoubleSpinBox::valueChanged),
-            this, [=](auto value){
+    this, [=](auto value) {
         this->currentParam.learningRate(value);
     });
     connect(ui->lineRandSeed, &QLineEdit::textChanged,
-            [&](auto text){
+    [&](auto text) {
         currentParam.randSeed(text.toUInt());
     });
     connect(ui->btnRefreshSeed, &QAbstractButton::clicked,
-            this, [=]{
+    this, [=] {
         ui->lineRandSeed->setText(QString::number(get_seed()));
     });
 
     // Group Closs
     connect(ui->spinKernelSize, Select<double>::OverloadOf(&QDoubleSpinBox::valueChanged),
-            this, [=](auto value){
+    this, [=](auto value) {
         this->currentParam.kernelSize(value);
     });
     connect(ui->spinPValue, Select<double>::OverloadOf(&QDoubleSpinBox::valueChanged),
-            this, [=](auto value){
+    this, [=](auto value) {
         this->currentParam.pValue(value);
     });
 
     // Group Data
     connect(ui->comboDataSource, Select<int>::OverloadOf(&QComboBox::currentIndexChanged),
-            this, [&](){
+    this, [&]() {
         auto source = DataSource(ui->comboDataSource->currentData().toInt());
         currentParam.dataSource(source);
 
@@ -113,14 +111,14 @@ void MainWindow::setupOptionPage()
     ui->comboDataSource->addItem("CSV", DataSource::CSV);
 
     connect(ui->lineCSVFile, &QLineEdit::textChanged,
-            this, [&](auto text){
+    this, [&](auto text) {
         currentParam.csvFilePath(text);
     });
     connect(ui->btnCSVBrowse, &QAbstractButton::clicked,
-            this, [&](){
+    this, [&]() {
         auto path = QFileDialog::getOpenFileName(this, tr("打开CSV数据文件"),
-                                                 "",
-                                                 tr("CSV 文件(*.csv)"));
+                    "",
+                    tr("CSV 文件(*.csv)"));
         ui->lineCSVFile->setText(path);
     });
 
@@ -136,12 +134,12 @@ void MainWindow::setupOptionPage()
             this, &MainWindow::updateButtons);
 
     connect(ui->btnInsertLayer, &QAbstractButton::clicked,
-            this, [=]{
+    this, [=] {
         auto pos = this->ui->tableNetStru->selectionModel()->currentIndex().row();
         layersModel->insertLayer(pos + 1, LayerDesc());
     });
     connect(ui->btnRemoveLayer, &QAbstractButton::clicked,
-            this, [=]{
+    this, [=] {
         auto pos = this->ui->tableNetStru->selectionModel()->currentIndex().row();
         layersModel->removeRows(pos, 1);
     });
@@ -153,21 +151,56 @@ void MainWindow::setupOptionPage()
     displayDefaultOptions();
 }
 
+void MainWindow::setupLogPage()
+{
+    auto msgList = static_cast<LogListWidget*>(ui->listLog);
+    auto addLogMessage = [msgList](const Log::Msg &msg) {
+        QString text;
+        QDateTime time = QDateTime::fromMSecsSinceEpoch(msg.timestamp);
+        QColor color;
+
+        switch (msg.type) {
+        case Log::INFO:
+            color.setNamedColor("blue");
+            break;
+        case Log::WARNING:
+            color.setNamedColor("orange");
+            break;
+        case Log::CRITICAL:
+            color.setNamedColor("red");
+            break;
+        default:
+            color = QApplication::palette().color(QPalette::WindowText);
+        }
+
+        text = "<font color='grey'>"
+               + time.toString(Qt::SystemLocaleShortDate)
+               + "</font> - <font color='" + color.name() + "'>"
+               + msg.message + "</font>";
+        msgList->appendLine(text);
+    };
+
+    auto logger = Logger::instance();
+    for (auto msg : logger->getMessages()) {
+        addLogMessage(msg);
+    }
+    connect(logger, &Logger::newLogMessage, addLogMessage);
+}
+
 void MainWindow::applyOptions()
 {
     auto param = LearnParam()
-                    .dataSource(DataSource(ui->comboDataSource->currentData().toInt()))
-                    .csvFilePath(ui->lineCSVFile->text())
-                    .learningRate(ui->spinLearnRate->value())
-                    .kernelSize(ui->spinKernelSize->value())
-                    .pValue(ui->spinPValue->value())
-                    .randSeed(ui->lineRandSeed->text().toUInt());
+                 .dataSource(DataSource(ui->comboDataSource->currentData().toInt()))
+                 .csvFilePath(ui->lineCSVFile->text())
+                 .learningRate(ui->spinLearnRate->value())
+                 .kernelSize(ui->spinKernelSize->value())
+                 .pValue(ui->spinPValue->value())
+                 .randSeed(ui->lineRandSeed->text().toUInt());
     param.layers(layersModel->layers());
 
     currentParam = param;
+    Logger::normal("初始化网络");
     handler->configure(param);
-
-    // change data range in prediction plane
 }
 
 void MainWindow::displayDefaultOptions()
@@ -877,7 +910,7 @@ void MainWindow::bracketDataSlot()
     }
 }
 
-void MainWindow::setupPlayground()
+void MainWindow::setupMonitorPage()
 {
     demoName = "Closs ANN";
 
@@ -918,7 +951,7 @@ QCPColorMap *MainWindow::createPredictMap(QCPAxis *xAxis, QCPAxis *yAxis, QCPCol
 
     // connect to data change signal
     connect(handler.get(), &UIHandler::predictionUpdated,
-            [=](auto data){
+    [=](auto data) {
         for (auto item : data) {
             auto point = item.toList();
             int x, y;
@@ -1049,7 +1082,7 @@ void MainWindow::setupProblemPlane(QCustomPlot *plot)
 
     // postpone two scatters setup to after applying options
     connect(handler.get(), &UIHandler::inputRangeUpdated,
-            this, [=](auto min, auto max){
+    this, [=](auto min, auto max) {
         QCPRange range(min, max);
         predictMap->data()->setRange(range, range);
         plot->xAxis->setRange(range);
@@ -1057,7 +1090,7 @@ void MainWindow::setupProblemPlane(QCustomPlot *plot)
     });
 
     connect(handler.get(), &UIHandler::outputRangeUpdated,
-            this, [=](auto min, auto max, auto labelsCount){
+    this, [=](auto min, auto max, auto labelsCount) {
         // set prediction map data range
         scale->setDataRange(QCPRange(min, max));
 

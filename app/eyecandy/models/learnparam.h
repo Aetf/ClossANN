@@ -72,6 +72,7 @@ public:
     void ensureHasOutputLayer();
 
     void debugPrint() const;
+    QString toDebugString(int indent = 4) const;
 
 private:
     DataSource dataSource_;

@@ -18,7 +18,7 @@
     <item>
      <widget class="QTabWidget" name="tabs">
       <property name="currentIndex">
-       <number>0</number>
+       <number>2</number>
       </property>
       <widget class="QWidget" name="tabParam">
        <attribute name="title">
@@ -236,32 +236,20 @@
         </item>
        </layout>
       </widget>
+      <widget class="QWidget" name="tabLog">
+       <attribute name="title">
+        <string>运行日志</string>
+       </attribute>
+       <layout class="QVBoxLayout" name="verticalLayout_3">
+        <item>
+         <widget class="LogListWidget" name="listLog" native="true"/>
+        </item>
+       </layout>
+      </widget>
       <widget class="QWidget" name="tabStatistics">
        <attribute name="title">
-        <string>统计数据</string>
+        <string>训练历史</string>
        </attribute>
-       <widget class="QWidget" name="horizontalLayoutWidget">
-        <property name="geometry">
-         <rect>
-          <x>280</x>
-          <y>130</y>
-          <width>160</width>
-          <height>80</height>
-         </rect>
-        </property>
-        <layout class="QHBoxLayout" name="horizontalLayout_3">
-         <item>
-          <widget class="QLineEdit" name="lineEdit"/>
-         </item>
-         <item>
-          <widget class="QPushButton" name="pushButton">
-           <property name="text">
-            <string>PushButton</string>
-           </property>
-          </widget>
-         </item>
-        </layout>
-       </widget>
       </widget>
      </widget>
     </item>
@@ -293,7 +281,13 @@
   <customwidget>
    <class>QCustomPlot</class>
    <extends>QWidget</extends>
-   <header>../../qcustomplot.h</header>
+   <header>qcustomplot.h</header>
+   <container>1</container>
+  </customwidget>
+  <customwidget>
+   <class>LogListWidget</class>
+   <extends>QWidget</extends>
+   <header>widgets/loglistwidget.h</header>
    <container>1</container>
   </customwidget>
  </customwidgets>

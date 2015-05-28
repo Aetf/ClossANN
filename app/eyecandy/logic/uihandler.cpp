@@ -4,6 +4,7 @@
 #include "models/learnparam.h"
 #include "models/learntask.h"
 #include "models/ucwdataset.h"
+#include "utils/logger.h"
 #include <OpenANN/OpenANN>
 #include <OpenANN/io/Logger.h>
 #include <OpenANN/util/Random.h>
@@ -13,7 +14,7 @@
 #include <QReadLocker>
 #include <QWriteLocker>
 
-using namespace OpenANN;
+using OpenANN::RandomNumberGenerator;
 
 UIHandler::UIHandler(QObject *parent)
     : QObject(parent)
@@ -52,6 +53,8 @@ void UIHandler::configure(const LearnParam &param)
 {
     if (configured_) dispose();
 
+    Logger::info() << param.toDebugString();
+
     task = new LearnTask(param);
 
     configured_ = true;
@@ -87,7 +90,9 @@ void UIHandler::run()
     // ensure data is in training mode before initialize
     task->data().inTrainingMode(true);
 
+    Logger::normal() << "网络初始化...";
     task->network().initialize();
+    Logger::normal() << "网络初始化完成";
 
     InterruptableLMA opt;
 

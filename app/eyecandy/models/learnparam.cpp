@@ -1,5 +1,6 @@
 #include "learnparam.h"
 #include <QDebug>
+#include <QTextStream>
 #include "utils/utils.h"
 
 LearnParam::LearnParam(double learnRate, double kernelSize, double pValue)
@@ -121,19 +122,32 @@ void LearnParam::ensureHasOutputLayer()
     }
 }
 
+QString LearnParam::toDebugString(int indent) const
+{
+    QString str;
+    QString ind(indent, ' ');
+    QTextStream out(&str);
+
+    out << ind << "Data source:" << dataSource() << "\n";
+    if (dataSource() == DataSource::CSV) {
+        out << ind << "CSV file path:" << csvFilePath() << "\n";
+    }
+    out << ind << "Learning rate:" << learningRate() << "\n";
+    out << ind << "Kernel size:" << kernelSize() << "\n";
+    out << ind << "P value:" << pValue() << "\n";
+    out << ind << "Layers:" << "\n";
+    for (auto layer : layers()) {
+        out << ind << "    "
+            << "Type:" << layer.type
+            << "nUnit:" << layer.nUnit
+            << "ActFunc:" << layer.activationFunc
+            << "\n";
+    }
+
+    return str;
+}
+
 void LearnParam::debugPrint() const
 {
-    qDebug() << "Data source:" << dataSource();
-    if (dataSource() == DataSource::CSV) {
-        qDebug() << "CSV file path:" << csvFilePath();
-    }
-    qDebug() << "Learning rate:" << learningRate();
-    qDebug() << "Kernel size:" << kernelSize();
-    qDebug() << "P value:" << pValue();
-    qDebug() << "Layers:";
-    for (auto layer : layers()) {
-        qDebug() << "    " << "Type:" << layer.type
-                 << "nUnit:" << layer.nUnit
-                 << "ActFunc:" << layer.activationFunc;
-    }
+    qDebug() << toDebugString(0);
 }

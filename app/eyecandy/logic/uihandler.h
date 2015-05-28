@@ -9,8 +9,12 @@
 class ClossNet;
 class LearnTask;
 class LearnParam;
+
+QT_BEGIN_NAMESPACE
 class QQmlEngine;
 class QJSEngine;
+QT_END_NAMESPACE
+
 namespace OpenANN {
 class Learner;
 }

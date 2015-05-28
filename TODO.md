@@ -3,7 +3,7 @@
 - [x] Make random seed an option
 - [x] More data source (partial: CSV datasource, not tested)
 - [x] Options to select different data
-- [ ] Implement log
+- [x] Implement log (partial, have bugs now)
 - [ ] Implement variable learning rate
 - [ ] Save result about each run
 - [ ] Determine CSV data source size dynamically

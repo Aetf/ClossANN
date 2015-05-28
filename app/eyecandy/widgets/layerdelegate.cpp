@@ -117,7 +117,7 @@ void LayerDelegate::setModelData(QWidget *editor, QAbstractItemModel *model,
 }
 
 void LayerDelegate::updateEditorGeometry(QWidget *editor, const QStyleOptionViewItem &option,
-                                         const QModelIndex &) const
+        const QModelIndex &) const
 {
     editor->setGeometry(option.rect);
 }
