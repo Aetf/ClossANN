@@ -6,7 +6,9 @@
 #include <QAction>
 #include <QDesktopWidget>
 #include <QDoubleSpinBox>
-#include <QPushButton>
+#include <QComboBox>
+#include <QFileDialog>
+#include <QAbstractButton>
 #include <QTabWidget>
 #include <QScreen>
 #include <QList>
@@ -70,11 +72,19 @@ void MainWindow::setupOptionPage()
     auto colResizer = new ColumnResizer(this);
     colResizer->addWidgetsFromLayout(ui->groupNet->layout(), 0);
     colResizer->addWidgetsFromLayout(ui->groupCloss->layout(), 0);
+    colResizer->addWidgetsFromLayout(ui->groupData->layout(), 0);
     
+    // Group Net
     connect(ui->spinLearnRate, Select<double>::OverloadOf(&QDoubleSpinBox::valueChanged),
             this, [=](auto value){
         this->currentParam.learningRate(value);
     });
+    connect(ui->lineRandSeed, &QLineEdit::textChanged,
+            [&](auto text){
+        currentParam.randSeed(text.toUInt());
+    });
+
+    // Group Closs
     connect(ui->spinKernelSize, Select<double>::OverloadOf(&QDoubleSpinBox::valueChanged),
             this, [=](auto value){
         this->currentParam.kernelSize(value);
@@ -84,6 +94,32 @@ void MainWindow::setupOptionPage()
         this->currentParam.pValue(value);
     });
 
+    // Group Data
+    connect(ui->comboDataSource, Select<int>::OverloadOf(&QComboBox::currentIndexChanged),
+            this, [&](){
+        auto source = DataSource(ui->comboDataSource->currentData().toInt());
+        currentParam.dataSource(source);
+
+        auto enableCSV = (source == DataSource::CSV);
+        ui->lineCSVFile->setEnabled(enableCSV);
+        ui->btnCSVBrowse->setEnabled(enableCSV);
+    });
+    ui->comboDataSource->addItem("TwoSpirals", DataSource::TwoSpirals);
+    ui->comboDataSource->addItem("CSV", DataSource::CSV);
+
+    connect(ui->lineCSVFile, &QLineEdit::textChanged,
+            this, [&](auto text){
+        currentParam.csvFilePath(text);
+    });
+    connect(ui->btnCSVBrowse, &QAbstractButton::clicked,
+            this, [&](){
+        auto path = QFileDialog::getOpenFileName(this, tr("打开CSV数据文件"),
+                                                 "",
+                                                 tr("CSV 文件(*.csv)"));
+        ui->lineCSVFile->setText(path);
+    });
+
+    // Group Net Structure
     layersModel = new LayerDescModel(this);
     ui->tableNetStru->setModel(layersModel);
     ui->tableNetStru->setItemDelegate(new LayerDelegate(this));
@@ -93,36 +129,40 @@ void MainWindow::setupOptionPage()
     connect(ui->tableNetStru->selectionModel(), &QItemSelectionModel::currentRowChanged,
             this, &MainWindow::updateButtons);
 
-    connect(ui->btnInsertLayer, &QPushButton::clicked,
+    connect(ui->btnInsertLayer, &QAbstractButton::clicked,
             this, [=]{
         auto pos = this->ui->tableNetStru->selectionModel()->currentIndex().row();
         layersModel->insertLayer(pos + 1, LayerDesc());
     });
-    connect(ui->btnRemoveLayer, &QPushButton::clicked,
+    connect(ui->btnRemoveLayer, &QAbstractButton::clicked,
             this, [=]{
         auto pos = this->ui->tableNetStru->selectionModel()->currentIndex().row();
         layersModel->removeRows(pos, 1);
     });
-    connect(ui->btnApplyConfig, &QPushButton::clicked,
+
+    // Apply button
+    connect(ui->btnApplyConfig, &QAbstractButton::clicked,
             this, &MainWindow::applyOptions);
-    connect(ui->btnRefreshSeed, &QPushButton::clicked,
+    connect(ui->btnRefreshSeed, &QAbstractButton::clicked,
             this, [=]{
         ui->lineRandSeed->setText(QString::number(get_seed()));
     });
 
     displayDefaultOptions();
-    ui->tableNetStru->selectRow(0);
 }
 
 void MainWindow::applyOptions()
 {
     auto param = LearnParam()
+                    .dataSource(DataSource(ui->comboDataSource->currentData().toInt()))
+                    .csvFilePath(ui->lineCSVFile->text())
                     .learningRate(ui->spinLearnRate->value())
                     .kernelSize(ui->spinKernelSize->value())
                     .pValue(ui->spinPValue->value())
                     .randSeed(ui->lineRandSeed->text().toUInt());
     param.layers(layersModel->layers());
 
+    currentParam = param;
     handler->configure(param);
 
     // change data range in prediction plane
@@ -131,12 +171,19 @@ void MainWindow::applyOptions()
 void MainWindow::displayDefaultOptions()
 {
     LearnParam param;
-    ui->spinKernelSize->setValue(param.kernelSize());
+    // Group Net
     ui->spinLearnRate->setValue(param.learningRate());
-    ui->spinPValue->setValue(param.pValue());
-
     ui->lineRandSeed->setText(QString::number(param.randSeed()));
 
+    // Group Closs
+    ui->spinKernelSize->setValue(param.kernelSize());
+    ui->spinPValue->setValue(param.pValue());
+
+    // Group Data
+    ui->comboDataSource->setCurrentIndex(ui->comboDataSource->findData(param.dataSource()));
+    ui->lineCSVFile->setText(param.csvFilePath());
+
+    // Group Net Structure
     layersModel->removeRows(0, layersModel->rowCount());
     layersModel->insertRows(0, param.layers().size());
     for (int i = 0; i!= param.layers().size(); i++) {
@@ -144,6 +191,7 @@ void MainWindow::displayDefaultOptions()
         v.setValue(param.layers()[i]);
         layersModel->setData(layersModel->index(i, 0), v, LayerDescModel::LayerDataRole);
     }
+    ui->tableNetStru->selectRow(0);
 }
 
 void MainWindow::updateButtons(const QModelIndex &curr, const QModelIndex &prev)

@@ -1,8 +1,8 @@
 - [x] Show prediction plane immediately after net init (not necessarily in training)
 - [x] ~~Save random seed about each run~~
 - [x] Make random seed an option
-- [ ] More data source (partial: CSV datasource, not tested)
-- [ ] Options to select different data
+- [x] More data source (partial: CSV datasource, not tested)
+- [x] Options to select different data
 - [ ] Implement log
 - [ ] Implement variable learning rate
 - [ ] Save result about each run
