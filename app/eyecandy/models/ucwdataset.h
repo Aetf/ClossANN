@@ -25,10 +25,11 @@ class UCWDataSet : public QObject, public DataSet
 public:
     enum DataSource {
         TwoSpirals,
-        Moon,
+        CSV,
+        None,
     };
 
-    UCWDataSet(DataSource source = TwoSpirals, int density = 2, double maxDiameter = 1.0);
+    UCWDataSet(DataSource source = TwoSpirals);
     virtual ~UCWDataSet();
 
     virtual int samples();
@@ -55,7 +56,7 @@ public:
      * @param testInputs test inputs
      * @param testOutputs test outputs
      */
-    void generateMoon(int density, double maxDiameter);
+    bool generateCSV(QString filePath);
 
     /**
      * Creates two interlocked spirals that form different classes.
@@ -71,12 +72,15 @@ public:
      * @param testInputs test inputs
      * @param testOutputs test outputs
      */
-    void generateTwoSpirals(int density, double maxDiameter);
+    bool generateTwoSpirals(int density = 2, double maxDiameter = 1.0);
+
+    bool generateNone();
 
 signals:
 
 protected:
     DirectStorageDataSet &dataSet();
+    void createInternalDataSet();
     void dispose();
 
 private:

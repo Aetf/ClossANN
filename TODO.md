@@ -1,12 +1,14 @@
-- [x] show prediction plane immediately after net init (not necessarily in training)
+- [x] Show prediction plane immediately after net init (not necessarily in training)
 - [x] ~~Save random seed about each run~~
 - [x] Make random seed an option
-- [ ] More data source
-- [ ] options to select different data
-- [ ] implement variable learning rate
+- [ ] More data source (partial: CSV datasource, not tested)
+- [ ] Options to select different data
+- [ ] Implement log
+- [ ] Implement variable learning rate
 - [ ] Save result about each run
-- [ ] toggle training and testing data display
-- [x] show training and testing data when not training
+- [ ] Determine CSV data source size dynamically
+- [ ] Toggle training and testing data display
+- [x] Show training and testing data when not training
 - [ ] Integer x axis in error line
 - [ ] Abnormal exit when running (handle interupt in runAsync)
 - [ ] Stop and pause ability
@@ -14,7 +16,7 @@
 - [ ] More figures
 - [ ] Proper window size
 - [ ] Dataset trainingmode multi-thread safe
-- [ ] error line tracking mouse show point data
-- [ ] prediction plane color fine tune
-- [ ] connect func for unique_ptr
+- [ ] Error line tracking mouse show point data
+- [ ] Prediction plane color fine tune
+- [ ] Connect func for unique_ptr
 - [ ] Rework eyecandy libs include to use function

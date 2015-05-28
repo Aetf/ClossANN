@@ -4,8 +4,10 @@
 #include <QList>
 #include <QMetaType>
 #include <OpenANN/optimization/StoppingCriteria.h>
+#include "models/ucwdataset.h"
 
 using OpenANN::StoppingCriteria;
+using DataSource = UCWDataSet::DataSource;
 
 struct LayerDesc
 {
@@ -35,10 +37,6 @@ Q_DECLARE_METATYPE(LayerDesc)
 class LearnParam
 {
 public:
-    enum DataSource {
-        TwoSprial
-    };
-
     LearnParam(double learningRate = 1, double kernelSize = 0.5, double pValue = 2);
 
     double learningRate() const;
@@ -65,6 +63,9 @@ public:
     DataSource dataSource() const;
     LearnParam& dataSource(DataSource source);
 
+    QString csvFilePath() const;
+    LearnParam& csvFilePath(const QString &path);
+
     const StoppingCriteria &stoppingCriteria() const;
     LearnParam& stoppingCriteria(const StoppingCriteria &criteria);
 
@@ -74,6 +75,7 @@ public:
 
 private:
     DataSource dataSource_;
+    QString csvFilePath_;
 
     StoppingCriteria stoppingCriteria_;
 

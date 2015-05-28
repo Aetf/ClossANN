@@ -3,7 +3,8 @@
 #include "utils/utils.h"
 
 LearnParam::LearnParam(double learnRate, double kernelSize, double pValue)
-    : dataSource_(TwoSprial)
+    : dataSource_(DataSource::CSV)
+    , csvFilePath_("/media/Documents/GradProject/data/VQdata.csv")
     , learningRate_(learnRate)
     , kernelSize_(kernelSize)
     , pValue_(pValue)
@@ -61,7 +62,7 @@ LearnParam &LearnParam::randSeed(unsigned int seed)
     return *this;
 }
 
-LearnParam::DataSource LearnParam::dataSource() const
+DataSource LearnParam::dataSource() const
 {
     return dataSource_;
 }
@@ -69,6 +70,17 @@ LearnParam::DataSource LearnParam::dataSource() const
 LearnParam &LearnParam::dataSource(DataSource source)
 {
     dataSource_ = source;
+    return *this;
+}
+
+QString LearnParam::csvFilePath() const
+{
+    return csvFilePath_;
+}
+
+LearnParam& LearnParam::csvFilePath(const QString &path)
+{
+    csvFilePath_ = path;
     return *this;
 }
 
@@ -111,6 +123,10 @@ void LearnParam::ensureHasOutputLayer()
 
 void LearnParam::debugPrint() const
 {
+    qDebug() << "Data source:" << dataSource();
+    if (dataSource() == DataSource::CSV) {
+        qDebug() << "CSV file path:" << csvFilePath();
+    }
     qDebug() << "Learning rate:" << learningRate();
     qDebug() << "Kernel size:" << kernelSize();
     qDebug() << "P value:" << pValue();

@@ -45,12 +45,18 @@ LearnTask::LearnTask(const LearnParam &param)
 
 UCWDataSet *LearnTask::createDataSourceFromParam(const LearnParam &param)
 {
+    auto source = new UCWDataSet(UCWDataSet::None);
     switch (param.dataSource()) {
-    case LearnParam::TwoSprial:
-        return new UCWDataSet;
+    case UCWDataSet::TwoSpirals:
+        source->generateTwoSpirals();
+        break;
+    case UCWDataSet::CSV:
+        source->generateCSV(param.csvFilePath());
+        break;
     default:
-        return nullptr;
+        break;
     }
+    return source;
 }
 
 ClossNet &LearnTask::network()
