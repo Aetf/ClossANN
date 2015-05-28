@@ -860,7 +860,7 @@ QCPColorMap *MainWindow::createPredictMap(QCPAxis *xAxis, QCPAxis *yAxis, QCPCol
     auto map = new QCPColorMap(xAxis, yAxis);
     // we want the color map to have nx * ny data points
     map->data()->setSize(nx, ny);
-    // and span the coordinate range -1..1 in both key (x) and value (y) dimensions
+    // and span the coordinate range 0..1 in both key (x) and value (y) dimensions
     map->data()->setRange(QCPRange(0, 1), QCPRange(0, 1));
 
     // connect to color scale
@@ -1000,15 +1000,14 @@ void MainWindow::setupProblemPlane(QCustomPlot *plot)
     // postpone two scatters setup to after applying options
     connect(handler.get(), &UIHandler::inputRangeUpdated,
             this, [=](auto min, auto max){
-        qDebug() << "Input range update to (" << min << "," << max << ")";
         QCPRange range(min, max);
         predictMap->data()->setRange(range, range);
-        plot->rescaleAxes();
+        plot->xAxis->setRange(range);
+        plot->yAxis->setRange(range);
     });
 
     connect(handler.get(), &UIHandler::outputRangeUpdated,
             this, [=](auto min, auto max, auto labelsCount){
-        qDebug() << "Onput range update to (" << min << "," << max << ") x" << labelsCount;
         // set prediction map data range
         scale->setDataRange(QCPRange(min, max));
 

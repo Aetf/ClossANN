@@ -184,13 +184,16 @@ void UIHandler::onIterationFinished()
 
 void UIHandler::generatePrediction(Learner& learner)
 {
+    int n = 30;
+    auto range = task->data().inputRange();
+    auto step = (range.second - range.first) / n;
     QVariantList prediction;
-    for(int x = 0; x < 30; x++)
+    for(int x = 0; x < n; x++)
     {
-        for(int y = 0; y < 30; y++)
+        for(int y = 0; y < n; y++)
         {
-            double xx = x / 30.0;
-            double yy = y / 30.0;
+            double xx = range.first + step * x;
+            double yy = range.first + step * y;
             Eigen::VectorXd in(2);
             in << xx, yy;
             Eigen::VectorXd out = learner(in);
