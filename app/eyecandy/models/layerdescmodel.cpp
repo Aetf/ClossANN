@@ -52,17 +52,13 @@ QVariant LayerDescModel::data(const QModelIndex &index, int role) const
         return v;
     }
 
-    if (role != Qt::DisplayRole && role != Qt::EditRole) {
-        return QVariant();
-    }
-
     switch (index.column()) {
     case Col_Position:
         return dataForColPosition(index.row(), role);
     case Col_Type:
         return dataForColType(index.row(), role);
     case Col_UnitCount:
-        return layers_[index.row()].nUnit;
+        return dataForColUnit(index.row(), role);
     case Col_ActFunc:
         return dataForColActFunc(index.row(), role);
     default:
@@ -86,6 +82,27 @@ QVariant LayerDescModel::dataForColPosition(int row, int role) const
             return "H";
         }
     }
+    default:
+        return QVariant();
+    }
+}
+
+QVariant LayerDescModel::dataForColUnit(int row, int role) const
+{
+    switch (role) {
+    case Qt::DisplayRole:
+    {
+        auto layer = layers_[row];
+        if (layer.type == LayerDesc::Input) {
+            return "-";
+        } else if (layer.type == LayerDesc::Output) {
+            return "-";
+        } else {
+            return layer.nUnit;
+        }
+    }
+    case Qt::EditRole:
+        return layers_[row].nUnit;
     default:
         return QVariant();
     }
@@ -160,13 +177,13 @@ QVariant LayerDescModel::headerData(int section, Qt::Orientation orientation,
 
     switch (section) {
     case Col_Position:
-        return tr("Position");
+        return tr("Pos");
     case Col_Type:
         return tr("Type");
     case Col_UnitCount:
-        return tr("Unit Count");
+        return tr("Units");
     case Col_ActFunc:
-        return tr("Activation");
+        return tr("Act");
     default:
         return QVariant();
     }

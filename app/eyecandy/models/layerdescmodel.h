@@ -49,6 +49,7 @@ protected:
     bool inRange(const QModelIndex &index) const;
     QVariant dataForColPosition(int row, int role) const;
     QVariant dataForColType(int row, int role) const;
+    QVariant dataForColUnit(int row, int role) const;
     QVariant dataForColActFunc(int row, int role) const;
 
 signals:

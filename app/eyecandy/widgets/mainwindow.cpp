@@ -75,6 +75,7 @@ void MainWindow::setupOptionPage()
     colResizer->addWidgetsFromLayout(ui->groupData->layout(), 0);
     
     // Group Net
+    ui->btnRefreshSeed->setIcon(awesome->icon(fa::refresh));
     connect(ui->spinLearnRate, Select<double>::OverloadOf(&QDoubleSpinBox::valueChanged),
             this, [=](auto value){
         this->currentParam.learningRate(value);
@@ -82,6 +83,10 @@ void MainWindow::setupOptionPage()
     connect(ui->lineRandSeed, &QLineEdit::textChanged,
             [&](auto text){
         currentParam.randSeed(text.toUInt());
+    });
+    connect(ui->btnRefreshSeed, &QAbstractButton::clicked,
+            this, [=]{
+        ui->lineRandSeed->setText(QString::number(get_seed()));
     });
 
     // Group Closs
@@ -125,6 +130,7 @@ void MainWindow::setupOptionPage()
     ui->tableNetStru->setItemDelegate(new LayerDelegate(this));
     ui->tableNetStru->setSelectionMode(QAbstractItemView::SingleSelection);
     ui->tableNetStru->setSelectionBehavior(QAbstractItemView::SelectRows);
+    ui->tableNetStru->horizontalHeader()->setSectionResizeMode(QHeaderView::ResizeToContents);
 
     connect(ui->tableNetStru->selectionModel(), &QItemSelectionModel::currentRowChanged,
             this, &MainWindow::updateButtons);
@@ -143,10 +149,6 @@ void MainWindow::setupOptionPage()
     // Apply button
     connect(ui->btnApplyConfig, &QAbstractButton::clicked,
             this, &MainWindow::applyOptions);
-    connect(ui->btnRefreshSeed, &QAbstractButton::clicked,
-            this, [=]{
-        ui->lineRandSeed->setText(QString::number(get_seed()));
-    });
 
     displayDefaultOptions();
 }
