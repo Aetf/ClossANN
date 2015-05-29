@@ -55,7 +55,7 @@ public:
         template<typename T>
         LogWritter &operator<<(T value)
         {
-            content = QString("%1%2").arg(content).arg(value);
+            content = QStringLiteral("%1%2").arg(content).arg(value);
             return *this;
         }
     };
