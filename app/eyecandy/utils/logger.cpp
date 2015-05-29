@@ -3,6 +3,22 @@
 #include <QDateTime>
 #include <QDebug>
 
+class LoggerStaticInitializer
+{
+private:
+    Logger *instance;
+
+    friend class Logger;
+public:
+    LoggerStaticInitializer()
+    {
+        qRegisterMetaType<Log::Msg>();
+        instance = new Logger;
+    }
+};
+
+Q_GLOBAL_STATIC(LoggerStaticInitializer, loggerStaticInitializer)
+
 namespace Log
 {
     Msg::Msg() {}
@@ -29,10 +45,7 @@ Logger::~Logger() {}
 
 Logger *Logger::instance()
 {
-    if (!m_instance)
-        m_instance = new Logger;
-
-    return m_instance;
+    return loggerStaticInitializer->instance;
 }
 
 void Logger::drop()

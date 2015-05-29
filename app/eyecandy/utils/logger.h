@@ -29,10 +29,11 @@ namespace Log
         MsgType type;
         QString message;
     };
-
 }
+Q_DECLARE_METATYPE(Log::MsgType)
+Q_DECLARE_METATYPE(Log::Msg)
 
-
+class LoggerStaticInitializer;
 class Logger : public QObject
 {
     Q_OBJECT
@@ -82,6 +83,7 @@ signals:
     void newLogMessage(const Log::Msg &message);
 
 private:
+    friend class LoggerStaticInitializer;
     Logger();
     static Logger* m_instance;
     QVector<Log::Msg> m_messages;

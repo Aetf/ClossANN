@@ -184,7 +184,7 @@ void MainWindow::setupLogPage()
     for (auto msg : logger->getMessages()) {
         addLogMessage(msg);
     }
-    connect(logger, &Logger::newLogMessage, addLogMessage);
+    connect(logger, &Logger::newLogMessage, this, addLogMessage);
 }
 
 void MainWindow::applyOptions()
