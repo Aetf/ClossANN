@@ -3,7 +3,7 @@
 - [x] Make random seed an option
 - [x] More data source (partial: CSV datasource, not tested)
 - [x] Options to select different data
-- [x] Implement log (partial, have bugs now)
+- [x] Implement log (done)
 - [ ] Implement variable learning rate
 - [ ] Save result about each run
 - [ ] Determine CSV data source size dynamically
@@ -14,7 +14,8 @@
 - [ ] Stop and pause ability
 - [ ] Handle more option chooise (i.e. more layer type)
 - [ ] More figures
-- [ ] Proper window size
+- [x] Proper window size
+- [ ] Log filter
 - [ ] Dataset trainingmode multi-thread safe
 - [ ] Error line tracking mouse show point data
 - [ ] Prediction plane color fine tune
