@@ -93,7 +93,6 @@ Logger::LogWritter::LogWritter(Logger *logger, Log::MsgType type)
     : logger(logger)
     , type(type)
     , content()
-    , stream(&content, QIODevice::WriteOnly)
     , empty(false)
 { }
 
@@ -101,7 +100,6 @@ Logger::LogWritter::LogWritter(Logger::LogWritter &&writter)
     : logger(writter.logger)
     , type(writter.type)
     , content(writter.content)
-    , stream(&content)
     , empty(false)
 {
     writter.empty = true;

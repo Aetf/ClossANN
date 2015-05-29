@@ -5,7 +5,6 @@
 #include <QVector>
 #include <QReadWriteLock>
 #include <QObject>
-#include <QTextStream>
 
 const int MAX_LOG_MESSAGES = 1000;
 
@@ -44,7 +43,6 @@ public:
         Logger* logger;
         Log::MsgType type;
         QString content;
-        QTextStream stream;
         bool empty;
 
         LogWritter(Logger *logger, Log::MsgType type);
@@ -57,7 +55,7 @@ public:
         template<typename T>
         LogWritter &operator<<(T value)
         {
-            stream << value;
+            content = QString("%1%2").arg(content).arg(value);
             return *this;
         }
     };
