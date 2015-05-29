@@ -101,9 +101,9 @@ void UIHandler::run()
 //    opt.optimize();
     while(opt.step())
     {
-        OPENANN_DEBUG << "Iteration #" << opt.currentIteration()
-                      << ", training error = "
-                      << OpenANN::FloatingPointFormatter(opt.currentError(), 4);
+        Logger::info() << "第" << opt.currentIteration() << "次迭代，"
+                      << "Error = "
+                      << QStringLiteral("%1").arg(opt.currentError(), 0, 'g', 4);
         emit iterationFinished(task, opt.currentIteration(), opt.currentError());
 //        {
 //            QReadLocker locker(&lockForCancelFlag);
