@@ -24,6 +24,7 @@
 #include "utils/awesomeiconprovider.h"
 #include "utils/logger.h"
 #include "columnresizer.h"
+#include "ClossNet.h"
 
 MainWindow::MainWindow(QWidget *parent)
     : QMainWindow(parent)
@@ -48,6 +49,7 @@ MainWindow::MainWindow(QWidget *parent)
     // for testing
     ui->tabs->setUpdatesEnabled(false);
     for (int i = 1; i!= 8; i++) {
+        if (i == 4) continue;
         auto plot = new QCustomPlot;
         setupDemo(i, plot);
         ui->tabs->addTab(plot, demoName);
@@ -255,21 +257,18 @@ void MainWindow::setupDemo(int demoIndex, QCustomPlot *plot)
         setupScatterStyleDemo(plot);
         break;
     case 2:
-        setupLineStyleDemo(plot);
-        break;
-    case 3:
         setupParametricCurveDemo(plot);
         break;
-    case 4:
+    case 3:
         setupBarChartDemo(plot);
         break;
-    case 5:
+    case 4:
         setupItemDemo(plot);
         break;
-    case 6:
+    case 5:
         setupStyledDemo(plot);
         break;
-    case 7:
+    case 6:
         setupAdvancedAxesDemo(plot);
         break;
     }
@@ -339,45 +338,6 @@ void MainWindow::setupScatterStyleDemo(QCustomPlot *customPlot)
     customPlot->yAxis->setTicks(false);
     customPlot->xAxis->setTickLabels(false);
     customPlot->yAxis->setTickLabels(false);
-    // make top right axes clones of bottom left axes:
-    customPlot->axisRect()->setupFullAxesBox();
-}
-
-void MainWindow::setupLineStyleDemo(QCustomPlot *customPlot)
-{
-    demoName = "Line Style Demo";
-    customPlot->legend->setVisible(true);
-    customPlot->legend->setFont(QFont("Helvetica", 9));
-    QPen pen;
-    QStringList lineNames;
-    lineNames << "lsNone" << "lsLine" << "lsStepLeft" << "lsStepRight" << "lsStepCenter" << "lsImpulse";
-    // add graphs with different line styles:
-    for (int i=QCPGraph::lsNone; i<=QCPGraph::lsImpulse; ++i)
-    {
-        customPlot->addGraph();
-        pen.setColor(QColor(qSin(i*1+1.2)*80+80, qSin(i*0.3+0)*80+80, qSin(i*0.3+1.5)*80+80));
-        customPlot->graph()->setPen(pen);
-        customPlot->graph()->setName(lineNames.at(i-QCPGraph::lsNone));
-        customPlot->graph()->setLineStyle((QCPGraph::LineStyle)i);
-        customPlot->graph()->setScatterStyle(QCPScatterStyle(QCPScatterStyle::ssCircle, 5));
-        // generate data:
-        QVector<double> x(15), y(15);
-        for (int j=0; j<15; ++j)
-        {
-            x[j] = j/15.0 * 5*3.14 + 0.01;
-            y[j] = 7*qSin(x[j])/x[j] - (i-QCPGraph::lsNone)*5 + (QCPGraph::lsImpulse)*5 + 2;
-        }
-        customPlot->graph()->setData(x, y);
-        customPlot->graph()->rescaleAxes(true);
-    }
-    // zoom out a bit:
-    customPlot->yAxis->scaleRange(1.1, customPlot->yAxis->range().center());
-    customPlot->xAxis->scaleRange(1.1, customPlot->xAxis->range().center());
-    // set blank axis lines:
-    customPlot->xAxis->setTicks(false);
-    customPlot->yAxis->setTicks(true);
-    customPlot->xAxis->setTickLabels(false);
-    customPlot->yAxis->setTickLabels(true);
     // make top right axes clones of bottom left axes:
     customPlot->axisRect()->setupFullAxesBox();
 }
@@ -975,11 +935,6 @@ public:
         }
     }
 
-    ~DataUpdater()
-    {
-        qDebug() << "DataUpdate deconstructed";
-    }
-
     void operator ()(QVariantList data)
     {
         for (auto item : graphAndLabels) {
@@ -1095,27 +1050,46 @@ void MainWindow::setupProblemPlane(QCustomPlot *plot)
 
 void MainWindow::setupErrorLine(QCustomPlot *plot)
 {
-    auto graph = plot->addGraph();
-    graph->setPen(QPen(Qt::blue));
-    graph->setBrush(QBrush(QColor(240, 255, 200)));
-    graph->setAntialiasedFill(false);
+    auto graphTrain = plot->addGraph();
+    graphTrain->setPen(QPen(Qt::blue));
+    graphTrain->setBrush(QBrush(QColor(150, 222, 0)));
+    graphTrain->setName("训练数据");
+    graphTrain->setAntialiasedFill(false);
+
+    auto graphTesting = plot->addGraph();
+    graphTesting->setPen(QPen(Qt::red));
+    graphTesting->setBrush(QBrush(QColor(255, 131, 0, 90)));
+    graphTesting->setName("测试数据");
+    graphTesting->setAntialiasedFill(false);
 
     plot->axisRect()->setupFullAxesBox();
 
     // connect to relative signals
     connect(handler.get(), &UIHandler::iterationFinished,
-            this, [graph](auto, auto iter, auto error){
-        graph->addData(iter, error);
+            this, [graphTrain, graphTesting, plot](auto task, auto iter, auto error){
+        // training error
+        graphTrain->addData(iter, error);
 
-        // rescale value (vertical) axis to fit the current data:
-        graph->rescaleValueAxis();
+        // compute testing error
+        task->data().inTrainingMode(false);
+        if (task->data().samples() > 0) {
+            graphTesting->addData(iter, task->network().error());
+        }
+        task->data().inTrainingMode(true);
 
-        graph->parentPlot()->xAxis->rescale();
-        graph->parentPlot()->replot();
+        // rescale axis to fit the current data:
+        plot->rescaleAxes();
+
+        // zoom out a bit
+        plot->xAxis->scaleRange(1.1, 0);
+        plot->yAxis->scaleRange(1.1, plot->yAxis->range().center());
+
+        plot->replot();
     });
     connect(handler.get(), &UIHandler::trainingStopped,
-            this, [graph]{
-        graph->clearData();
+            this, [graphTrain, graphTesting]{
+        graphTrain->clearData();
+        graphTesting->clearData();
     });
 }
 

@@ -5,7 +5,7 @@
 - [x] Options to select different data
 - [x] Implement log (done)
 - [x] Stop ability
-- [ ] Do testing while training
+- [x] Do testing while training
 - [ ] Toggle training and testing data display
 - [ ] Save result about each run
 - [ ] Implement variable learning rate

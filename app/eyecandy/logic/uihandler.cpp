@@ -111,12 +111,11 @@ void UIHandler::run()
                       << "Error = "
                       << QStringLiteral("%1").arg(opt.currentError(), 0, 'g', 4);
         emit iterationFinished(task, opt.currentIteration(), opt.currentError());
-        {
-            QReadLocker locker(&lockForCancelFlag);
-            if(cancelFlag) {
-                Logger::normal() << "训练中途取消";
-                break;
-            }
+
+        QReadLocker locker(&lockForCancelFlag);
+        if(cancelFlag) {
+            Logger::normal() << "训练中途取消";
+            break;
         }
     }
     opt.result();

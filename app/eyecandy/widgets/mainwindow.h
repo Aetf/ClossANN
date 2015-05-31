@@ -34,7 +34,6 @@ public:
 
     void setupDemo(int demoIndex, QCustomPlot *plot);
     void setupScatterStyleDemo(QCustomPlot *customPlot);
-    void setupLineStyleDemo(QCustomPlot *customPlot);
     void setupParametricCurveDemo(QCustomPlot *customPlot);
     void setupBarChartDemo(QCustomPlot *customPlot);
     void setupItemDemo(QCustomPlot *customPlot);
