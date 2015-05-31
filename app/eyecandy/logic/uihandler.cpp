@@ -20,7 +20,7 @@ UIHandler::UIHandler(QObject *parent)
     : QObject(parent)
     , cancelFlag(false)
     , predictionInRequest(false)
-    , running(false)
+    , running_(false)
     , configured_(false)
     , task(nullptr)
 {
@@ -37,6 +37,7 @@ UIHandler::~UIHandler()
 
 void UIHandler::dispose()
 {
+    terminateTraining();
     delete task;
     task = nullptr;
     configured_ = false;
@@ -71,12 +72,18 @@ bool UIHandler::configured() const
     return configured_;
 }
 
+bool UIHandler::training() const
+{
+    return running_;
+}
+
 void UIHandler::runAsync()
 {
     if (!configured_) return;
-    if (running) return;
+    if (running_) return;
 
-    running = true;
+    running_ = true;
+    cancelFlag = false;
     auto future = QtConcurrent::run(this, &UIHandler::run);
     futureWatcher.setFuture(future);
 }
@@ -98,26 +105,38 @@ void UIHandler::run()
 
     opt.setOptimizable(task->network());
     opt.setStopCriteria(task->stopCriteria());
-//    opt.optimize();
     while(opt.step())
     {
         Logger::info() << "第" << opt.currentIteration() << "次迭代，"
                       << "Error = "
                       << QStringLiteral("%1").arg(opt.currentError(), 0, 'g', 4);
         emit iterationFinished(task, opt.currentIteration(), opt.currentError());
-//        {
-//            QReadLocker locker(&lockForCancelFlag);
-//            if(cancelFlag) break;
-//        }
+        {
+            QReadLocker locker(&lockForCancelFlag);
+            if(cancelFlag) {
+                Logger::normal() << "训练中途取消";
+                break;
+            }
+        }
     }
     opt.result();
 }
 
+void UIHandler::onTrainingFinished()
+{
+    cancelFlag = false;
+    running_ = false;
+    emit trainingStopped();
+}
+
 void UIHandler::terminateTraining()
 {
-    if (!configured_) return;
-    QWriteLocker locker(&lockForCancelFlag);
-    cancelFlag = true;
+    if (!configured() || !training()) return;
+    {
+        QWriteLocker locker(&lockForCancelFlag);
+        cancelFlag = true;
+    }
+    futureWatcher.waitForFinished();
 }
 
 void UIHandler::requestPrediction(bool async)
@@ -176,12 +195,6 @@ QVariantList UIHandler::getTestingSet()
     return data;
 }
 
-void UIHandler::onTrainingFinished()
-{
-    cancelFlag = false;
-    running = false;
-}
-
 void UIHandler::onIterationFinished()
 {
     generatePrediction(task->network());
@@ -225,7 +238,8 @@ void UIHandler::sendTestingDataUpdated()
 void UIHandler::sendInputRangeUpdated()
 {
     if (!configured_) return;
-    emit inputRangeUpdated(task->data().inputRange().first, task->data().inputRange().second);
+    emit inputRangeUpdated(task->data().inputRange().first,
+                           task->data().inputRange().second);
 }
 
 void UIHandler::sendOutputRangeUpdated()

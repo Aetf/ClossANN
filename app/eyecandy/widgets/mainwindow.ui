@@ -275,6 +275,14 @@
     <string>Train</string>
    </property>
   </action>
+  <action name="actionStop">
+   <property name="text">
+    <string>停止</string>
+   </property>
+   <property name="toolTip">
+    <string>停止训练</string>
+   </property>
+  </action>
  </widget>
  <layoutdefault spacing="6" margin="11"/>
  <customwidgets>

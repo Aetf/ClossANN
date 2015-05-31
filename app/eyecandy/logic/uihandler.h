@@ -37,7 +37,8 @@ public slots:
     void requestPrediction(bool async = true);
     void requestPredictionAsync();
 
-    bool configured() const;
+    inline bool configured() const;
+    inline bool training() const;
 
     QVariantList getTrainingSet();
     QVariantList getTestingSet();
@@ -49,6 +50,7 @@ signals:
     void iterationFinished(LearnTask *task, int iter, double error);
     void inputRangeUpdated(double min, double max);
     void outputRangeUpdated(double min, double max, int labelsCount);
+    void trainingStopped();
 
 protected slots:
     void onTrainingFinished();
@@ -65,7 +67,7 @@ private:
     QReadWriteLock lockForCancelFlag;
     bool cancelFlag;
     bool predictionInRequest;
-    bool running;
+    bool running_;
 
     // neural network related
     bool configured_;

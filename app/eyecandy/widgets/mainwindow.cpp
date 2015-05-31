@@ -40,8 +40,6 @@ MainWindow::MainWindow(QWidget *parent)
     setupMonitorPage();
     setupLogPage();
 
-    connect(handler.get(), &UIHandler::iterationFinished,
-            this, &MainWindow::onTrainIterationFinished);
     connect(&predictionTimer, &QTimer::timeout,
             handler.get(),&UIHandler::requestPredictionAsync);
 
@@ -63,6 +61,11 @@ void MainWindow::setupToolbar()
     connect(ui->actionTrain, &QAction::triggered,
             this, &MainWindow::trainClossNN);
     ui->toolBar->addAction(ui->actionTrain);
+
+    ui->actionStop->setIcon(AwesomeIconProvider::instance()->icon(fa::stop));
+    connect(ui->actionStop, &QAction::triggered,
+            this, &MainWindow::stopTraining);
+    ui->toolBar->addAction(ui->actionStop);
 }
 
 void MainWindow::setupOptionPage()
@@ -852,21 +855,10 @@ void MainWindow::trainClossNN()
     predictionTimer.start(200);
 }
 
-void MainWindow::onTrainIterationFinished(LearnTask *, int iter, double error)
+void MainWindow::stopTraining()
 {
-    ui->plotErrorLine->graph(0)->addData(iter, error);
-
-    // remove data of lines that's outside visible range:
-//    ui->plotColorMap->graph(0)->removeDataBefore(key-8);
-
-    // rescale value (vertical) axis to fit the current data:
-    ui->plotErrorLine->graph(0)->rescaleValueAxis();
-
-    // make key axis range scroll with the data (at a constant range size of 8):
-//    ui->plotErrorLine->xAxis->setRange(key+0.25, 8, Qt::AlignRight);
-
-    ui->plotErrorLine->xAxis->rescale();
-    ui->plotErrorLine->replot();
+    predictionTimer.stop();
+    handler->terminateTraining();
 }
 
 void MainWindow::bracketDataSlot()
@@ -1109,6 +1101,22 @@ void MainWindow::setupErrorLine(QCustomPlot *plot)
     graph->setAntialiasedFill(false);
 
     plot->axisRect()->setupFullAxesBox();
+
+    // connect to relative signals
+    connect(handler.get(), &UIHandler::iterationFinished,
+            this, [graph](auto, auto iter, auto error){
+        graph->addData(iter, error);
+
+        // rescale value (vertical) axis to fit the current data:
+        graph->rescaleValueAxis();
+
+        graph->parentPlot()->xAxis->rescale();
+        graph->parentPlot()->replot();
+    });
+    connect(handler.get(), &UIHandler::trainingStopped,
+            this, [graph]{
+        graph->clearData();
+    });
 }
 
 MainWindow::~MainWindow()

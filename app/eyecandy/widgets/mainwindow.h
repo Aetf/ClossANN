@@ -54,6 +54,7 @@ protected:
     void applyOptions();
 
     void trainClossNN();
+    void stopTraining();
 
     QCPColorScale *createPredictColorScale(QCustomPlot *plot);
     QCPColorMap *createPredictMap(QCPAxis *xAxis, QCPAxis *yAxis, QCPColorScale *scale);
@@ -64,8 +65,6 @@ private slots:
     void bracketDataSlot();
     void screenShot();
     void updateButtons(const QModelIndex &curr, const QModelIndex &prev);
-
-    void onTrainIterationFinished(LearnTask *task, int iter, double error);
 
 private:
     unique_ptr<Ui::MainWindow> ui;
