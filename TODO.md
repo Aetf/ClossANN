@@ -11,7 +11,7 @@
 - [ ] Implement variable learning rate
 - [ ] Determine CSV data source size dynamically
 - [x] Show training and testing data when not training
-- [ ] Integer x axis in error line
+- [x] ~~Integer x axis in error line (not possible in QCustomPlot 1.x)~~
 - [x] Abnormal exit when running (handle interupt in runAsync)
 - [ ] Handle more option chooise (i.e. more layer type)
 - [ ] More figures
