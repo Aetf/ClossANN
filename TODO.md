@@ -4,14 +4,15 @@
 - [x] More data source (partial: CSV datasource, not tested)
 - [x] Options to select different data
 - [x] Implement log (done)
-- [ ] Implement variable learning rate
-- [ ] Save result about each run
-- [ ] Determine CSV data source size dynamically
+- [ ] Stop and pause ability
+- [ ] Do testing while training
 - [ ] Toggle training and testing data display
+- [ ] Save result about each run
+- [ ] Implement variable learning rate
+- [ ] Determine CSV data source size dynamically
 - [x] Show training and testing data when not training
 - [ ] Integer x axis in error line
 - [ ] Abnormal exit when running (handle interupt in runAsync)
-- [ ] Stop and pause ability
 - [ ] Handle more option chooise (i.e. more layer type)
 - [ ] More figures
 - [x] Proper window size
