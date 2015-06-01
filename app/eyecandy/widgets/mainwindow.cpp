@@ -124,7 +124,8 @@ void MainWindow::setupOptionPage()
         auto path = QFileDialog::getOpenFileName(this, tr("打开CSV数据文件"),
                     "",
                     tr("CSV 文件(*.csv)"));
-        ui->lineCSVFile->setText(path);
+        if (!path.isEmpty())
+            ui->lineCSVFile->setText(path);
     });
 
     // Group Net Structure
