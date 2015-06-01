@@ -17,7 +17,7 @@
 - [ ] More figures
 - [x] Proper window size
 - [ ] Log filter
-- [ ] Dataset trainingmode multi-thread safe
+- [x] Dataset trainingmode multi-thread safe
 - [ ] Error line tracking mouse show point data
 - [ ] Prediction plane color fine tune
 - [ ] Connect func for unique_ptr

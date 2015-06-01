@@ -13,6 +13,7 @@
 #include <QVariantMap>
 #include <QReadLocker>
 #include <QWriteLocker>
+#include <QMutexLocker>
 
 using OpenANN::RandomNumberGenerator;
 
@@ -94,8 +95,6 @@ void UIHandler::run()
 
     // set random seed
     RandomNumberGenerator().seed(task->parameters().randSeed());
-    // ensure data is in training mode before initialize
-    task->data().inTrainingMode(true);
 
     Logger::normal() << "网络初始化...";
     task->network().initialize();
@@ -105,12 +104,28 @@ void UIHandler::run()
 
     opt.setOptimizable(task->network());
     opt.setStopCriteria(task->stopCriteria());
-    while(opt.step())
+
+    // protect multithread access to data
+    auto step = [&](){
+        // ensure data is in training mode
+        auto ctx = task->data().enterTrainingMode(false);
+        return opt.step();
+    };
+
+    while(step())
     {
         Logger::info() << "第" << opt.currentIteration() << "次迭代，"
                       << "Error = "
                       << QStringLiteral("%1").arg(opt.currentError(), 0, 'g', 4);
-        emit iterationFinished(task, opt.currentIteration(), opt.currentError());
+
+        double testError = 0.0;
+        // compute testing error, ensure in testing mode
+        auto ctx = task->data().enterTestingMode(false);
+        if (task->data().samples() > 0) {
+            testError = task->network().error();
+        }
+
+        emit iterationFinished(task, opt.currentIteration(), opt.currentError(), testError);
 
         QReadLocker locker(&lockForCancelFlag);
         if(cancelFlag) {

@@ -4,6 +4,7 @@
 #include <Eigen/Core>
 #include <OpenANN/io/DataSet.h>
 #include <QObject>
+#include <QMutex>
 #include <QVariantList>
 #include <memory>
 #include <utility>
@@ -23,6 +24,23 @@ class UCWDataSet : public QObject, public DataSet
 {
     Q_OBJECT
 public:
+    class ContextManager
+    {
+        UCWDataSet *dataset_;
+        bool oldMode_;
+        bool multiThreadSafe_;
+        bool empty_;
+
+        ContextManager(UCWDataSet *dataset_, bool inTrainingMode, bool multiThreadSafe = true);
+        void maybeLock();
+        void maybeUnlock();
+
+        friend class UCWDataSet;
+    public:
+        ContextManager(ContextManager &&other);
+        ~ContextManager();
+    };
+
     enum DataSource {
         TwoSpirals,
         CSV,
@@ -41,6 +59,8 @@ public:
 
     void inTrainingMode(bool val);
     bool inTrainingMode() const;
+    ContextManager enterTrainingMode(bool multiThreadSafe = true);
+    ContextManager enterTestingMode(bool multiThreadSafe = true);
 
     range inputRange() const;
     range outputRange() const;
@@ -94,5 +114,6 @@ private:
     range inputRange_;
     range outputRange_;
     int outputLabelCount_;
+    QMutex modeLock_;
 };
 #endif // DATASET_H_

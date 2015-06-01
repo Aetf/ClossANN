@@ -16,6 +16,7 @@ using namespace OpenANN;
 using Eigen::MatrixXd;
 using Eigen::VectorXd;
 using csv::CSVReader;
+using ContextManager = UCWDataSet::ContextManager;
 
 UCWDataSet::UCWDataSet(DataSource source)
     : DataSet()
@@ -218,4 +219,52 @@ bool UCWDataSet::generateCSV(QString filePath)
 
     createInternalDataSet();
     return true;
+}
+
+ContextManager::ContextManager(UCWDataSet *dataset, bool inTrainingMode, bool multiThreadSafe)
+    : dataset_(dataset)
+    , oldMode_(dataset->inTrainingMode())
+    , multiThreadSafe_(multiThreadSafe)
+    , empty_(false)
+{
+    maybeLock();
+    dataset->inTrainingMode(inTrainingMode);
+}
+
+ContextManager::ContextManager(ContextManager &&other)
+    : dataset_(other.dataset_)
+    , oldMode_(other.oldMode_)
+    , empty_(false)
+{
+    other.empty_ = true;
+}
+
+void ContextManager::maybeLock()
+{
+    if (multiThreadSafe_)
+        dataset_->modeLock_.lock();
+}
+
+void ContextManager::maybeUnlock()
+{
+    if (multiThreadSafe_)
+        dataset_->modeLock_.unlock();
+}
+
+ContextManager::~ContextManager()
+{
+    if (!empty_) {
+        dataset_->inTrainingMode(oldMode_);
+        maybeUnlock();
+    }
+}
+
+ContextManager UCWDataSet::enterTrainingMode(bool multiThreadSafe)
+{
+    return ContextManager(this, true, multiThreadSafe);
+}
+
+ContextManager UCWDataSet::enterTestingMode(bool multiThreadSafe)
+{
+    return ContextManager(this, false, multiThreadSafe);
 }

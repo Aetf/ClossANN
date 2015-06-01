@@ -47,7 +47,7 @@ signals:
     void predictionUpdated(QVariantList data);
     void trainingDataUpdated(QVariantList data);
     void testingDataUpdated(QVariantList data);
-    void iterationFinished(LearnTask *task, int iter, double error);
+    void iterationFinished(LearnTask *task, int iter, double error, double testError);
     void inputRangeUpdated(double min, double max);
     void outputRangeUpdated(double min, double max, int labelsCount);
     void trainingStopped();

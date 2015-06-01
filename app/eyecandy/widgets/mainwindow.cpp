@@ -1067,16 +1067,12 @@ void MainWindow::setupErrorLine(QCustomPlot *plot)
 
     // connect to relative signals
     connect(handler.get(), &UIHandler::iterationFinished,
-            this, [graphTrain, graphTesting, plot](auto task, auto iter, auto error){
+            this,
+            [graphTrain, graphTesting, plot](auto, auto iter,
+                                             auto error, auto testError){
         // training error
         graphTrain->addData(iter, error);
-
-        // compute testing error
-        task->data().inTrainingMode(false);
-        if (task->data().samples() > 0) {
-            graphTesting->addData(iter, task->network().error());
-        }
-        task->data().inTrainingMode(true);
+        graphTesting->addData(iter, testError);
 
         // rescale axis to fit the current data:
         plot->rescaleAxes();
