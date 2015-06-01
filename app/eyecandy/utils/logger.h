@@ -46,10 +46,10 @@ public:
         bool empty;
 
         LogWritter(Logger *logger, Log::MsgType type);
-        LogWritter(LogWritter &&writter);
 
         friend class Logger;
     public:
+        LogWritter(LogWritter &&writter);
         ~LogWritter();
 
         template<typename T>
