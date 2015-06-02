@@ -5,6 +5,7 @@
 #include <QMetaType>
 #include <OpenANN/optimization/StoppingCriteria.h>
 #include "models/ucwdataset.h"
+#include "utils/logger.h"
 
 using OpenANN::StoppingCriteria;
 using DataSource = UCWDataSet::DataSource;
@@ -72,7 +73,7 @@ public:
     void ensureHasOutputLayer();
 
     void debugPrint() const;
-    QString toDebugString(int indent = 4) const;
+    QString toDebugString(int indent = 4, char indentChar = ' ') const;
 
 private:
     DataSource dataSource_;
@@ -86,5 +87,7 @@ private:
     unsigned int randSeed_;
     QList<LayerDesc> layers_;
 };
+
+Logger operator <<(Logger writter, const LearnParam &param);
 
 #endif // LEARNPARAM_H

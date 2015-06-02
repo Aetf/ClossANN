@@ -122,10 +122,10 @@ void LearnParam::ensureHasOutputLayer()
     }
 }
 
-QString LearnParam::toDebugString(int indent) const
+QString LearnParam::toDebugString(int indent, char indentChar) const
 {
     QString str;
-    QString ind(indent, ' ');
+    QString ind(indent, indentChar);
     QTextStream out(&str);
 
     out << ind << "Data source:" << dataSource() << "\n";
@@ -137,11 +137,15 @@ QString LearnParam::toDebugString(int indent) const
     out << ind << "P value:" << pValue() << "\n";
     out << ind << "Layers:" << "\n";
     for (auto layer : layers()) {
-        out << ind << "    "
-            << "Type:" << layer.type
-            << "nUnit:" << layer.nUnit
+        out << ind << QString(4, indentChar)
+            << "Type:" << layer.type << ", "
+            << "nUnit:" << layer.nUnit << ", "
             << "ActFunc:" << layer.activationFunc
             << "\n";
+    }
+
+    if (str.endsWith(QLatin1Char('\n'))) {
+        str.chop(1);
     }
 
     return str;
@@ -150,4 +154,11 @@ QString LearnParam::toDebugString(int indent) const
 void LearnParam::debugPrint() const
 {
     qDebug() << toDebugString(0);
+}
+
+Log::Logger operator <<(Log::Logger writter, const LearnParam &param)
+{
+    return writter << param.toDebugString(32, '`')
+                      .replace("\n", "<br>")
+                      .replace("`", "&nbsp;");
 }
