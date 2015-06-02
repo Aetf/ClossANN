@@ -29,31 +29,25 @@ Msg::Msg(int id, MsgType type, const QString &message)
     , type(type)
     , message(message)
 { }
-
 }
 
-Logger* Logger::m_instance = 0;
+LogWritter::~LogWritter()
+{
+    if (!--stream->ref) {
+        stream->logger->addMessage(stream->buffer, stream->type);
+        delete stream;
+    }
+}
 
 Logger::Logger()
     : lock(QReadWriteLock::Recursive)
     , msgCounter(0)
-    , peerCounter(0)
 {
 }
-
-Logger::~Logger() {}
 
 Logger *Logger::instance()
 {
     return loggerStaticInitializer->instance;
-}
-
-void Logger::drop()
-{
-    if (m_instance) {
-        delete m_instance;
-        m_instance = 0;
-    }
 }
 
 void Logger::addMessage(const QString &message, const Log::MsgType &type)
@@ -89,45 +83,22 @@ void Logger::critical(const QString &message)
     instance()->addMessage(message, Log::CRITICAL);
 }
 
-Logger::LogWritter::LogWritter(Logger *logger, Log::MsgType type)
-    : logger(logger)
-    , type(type)
-    , content()
-    , empty(false)
-{ }
-
-Logger::LogWritter::LogWritter(Logger::LogWritter &&writter)
-    : logger(writter.logger)
-    , type(writter.type)
-    , content(writter.content)
-    , empty(false)
-{
-    writter.empty = true;
-}
-
-Logger::LogWritter::~LogWritter()
-{
-    if (!empty) {
-        logger->addMessage(content, type);
-    }
-}
-
-Logger::LogWritter Logger::info()
+LogWritter Logger::info()
 {
     return LogWritter(instance(), Log::INFO);
 }
 
-Logger::LogWritter Logger::normal()
+LogWritter Logger::normal()
 {
     return LogWritter(instance(), Log::NORMAL);
 }
 
-Logger::LogWritter Logger::warning()
+LogWritter Logger::warning()
 {
     return LogWritter(instance(), Log::WARNING);
 }
 
-Logger::LogWritter Logger::critical()
+LogWritter Logger::critical()
 {
     return LogWritter(instance(), Log::CRITICAL);
 }

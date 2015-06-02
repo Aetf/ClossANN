@@ -5,6 +5,7 @@
 #include <QVector>
 #include <QReadWriteLock>
 #include <QObject>
+#include <QTextStream>
 
 const int MAX_LOG_MESSAGES = 1000;
 
@@ -32,33 +33,41 @@ struct Msg
 Q_DECLARE_METATYPE(Log::MsgType)
 Q_DECLARE_METATYPE(Log::Msg)
 
+class Logger;
+class LogWritter {
+
+    struct Stream {
+        Stream (Logger *l, Log::MsgType t)
+            : logger(l), type(t), ts(&buffer, QIODevice::WriteOnly), ref(1) {}
+
+        Logger *logger;
+        Log::MsgType type;
+        QString buffer;
+        QTextStream ts;
+        int ref;
+    } *stream;
+
+    friend class Logger;
+    LogWritter(Logger *logger, Log::MsgType type) : stream(new Stream(logger, type)) {}
+
+public:
+    inline LogWritter(const LogWritter &o) : stream(o.stream) { ++stream->ref; }
+    ~LogWritter();
+
+    template<typename T>
+    inline LogWritter operator<<(T value) { stream->ts << value; return *this; }
+    inline LogWritter operator<<(const char* t) { stream->ts << QString::fromLocal8Bit(t); return *this; }
+};
+
 class LoggerStaticInitializer;
 class Logger : public QObject
 {
     Q_OBJECT
     Q_DISABLE_COPY(Logger)
 
+    friend class LoggerStaticInitializer;
+
 public:
-    class LogWritter {
-        Logger* logger;
-        Log::MsgType type;
-        QString content;
-        bool empty;
-
-        LogWritter(Logger *logger, Log::MsgType type);
-
-        friend class Logger;
-    public:
-        LogWritter(LogWritter &&writter);
-        ~LogWritter();
-
-        template<typename T>
-        LogWritter &operator<<(T value)
-        {
-            content = QStringLiteral("%1%2").arg(content).arg(value);
-            return *this;
-        }
-    };
 
     static Logger* instance();
     static void info(const QString &message);
@@ -70,9 +79,6 @@ public:
     static LogWritter warning();
     static LogWritter critical();
 
-    static void drop();
-    ~Logger();
-
     void addMessage(const QString &message, const Log::MsgType &type = Log::NORMAL);
 
     QVector<Log::Msg> getMessages(int lastKnownId = -1) const;
@@ -81,13 +87,11 @@ signals:
     void newLogMessage(const Log::Msg &message);
 
 private:
-    friend class LoggerStaticInitializer;
     Logger();
-    static Logger* m_instance;
+
     QVector<Log::Msg> m_messages;
     mutable QReadWriteLock lock;
     int msgCounter;
-    int peerCounter;
 };
 
 #endif // LOGGER_H
