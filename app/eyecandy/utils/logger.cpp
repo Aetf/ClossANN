@@ -3,25 +3,23 @@
 #include <QDateTime>
 #include <QDebug>
 
+namespace Log
+{
 class LoggerStaticInitializer
 {
 private:
-    Logger *instance;
+    LogStorage *instance;
 
-    friend class Logger;
+    friend class LogStorage;
 public:
     LoggerStaticInitializer()
     {
-        qRegisterMetaType<Log::Msg>();
-        instance = new Logger;
+        qRegisterMetaType<Msg>();
+        instance = new LogStorage;
     }
 };
 
 Q_GLOBAL_STATIC(LoggerStaticInitializer, loggerStaticInitializer)
-
-namespace Log
-{
-Msg::Msg() {}
 
 Msg::Msg(int id, MsgType type, const QString &message)
     : id(id)
@@ -29,28 +27,19 @@ Msg::Msg(int id, MsgType type, const QString &message)
     , type(type)
     , message(message)
 { }
-}
 
-LogWritter::~LogWritter()
-{
-    if (!--stream->ref) {
-        stream->logger->addMessage(stream->buffer, stream->type);
-        delete stream;
-    }
-}
-
-Logger::Logger()
+LogStorage::LogStorage()
     : lock(QReadWriteLock::Recursive)
     , msgCounter(0)
 {
 }
 
-Logger *Logger::instance()
+LogStorage *LogStorage::instance()
 {
     return loggerStaticInitializer->instance;
 }
 
-void Logger::addMessage(const QString &message, const Log::MsgType &type)
+void LogStorage::addMessage(const QString &message, const Log::MsgType &type)
 {
     QWriteLocker locker(&lock);
 
@@ -63,47 +52,7 @@ void Logger::addMessage(const QString &message, const Log::MsgType &type)
     emit newLogMessage(temp);
 }
 
-void Logger::info(const QString &message)
-{
-    instance()->addMessage(message, Log::INFO);
-}
-
-void Logger::normal(const QString &message)
-{
-    instance()->addMessage(message, Log::NORMAL);
-}
-
-void Logger::warning(const QString &message)
-{
-    instance()->addMessage(message, Log::WARNING);
-}
-
-void Logger::critical(const QString &message)
-{
-    instance()->addMessage(message, Log::CRITICAL);
-}
-
-LogWritter Logger::info()
-{
-    return LogWritter(instance(), Log::INFO);
-}
-
-LogWritter Logger::normal()
-{
-    return LogWritter(instance(), Log::NORMAL);
-}
-
-LogWritter Logger::warning()
-{
-    return LogWritter(instance(), Log::WARNING);
-}
-
-LogWritter Logger::critical()
-{
-    return LogWritter(instance(), Log::CRITICAL);
-}
-
-QVector<Log::Msg> Logger::getMessages(int lastKnownId) const
+QVector<Log::Msg> LogStorage::getMessages(int lastKnownId) const
 {
     QReadLocker locker(&lock);
 
@@ -118,3 +67,13 @@ QVector<Log::Msg> Logger::getMessages(int lastKnownId) const
 
     return m_messages.mid(size - diff);
 }
+
+Logger::~Logger()
+{
+    if (!--stream->ref) {
+        stream->store->addMessage(stream->buffer, stream->type);
+        delete stream;
+    }
+}
+
+} // namespace Log

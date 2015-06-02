@@ -44,7 +44,7 @@ MainWindow::MainWindow(QWidget *parent)
     connect(&predictionTimer, &QTimer::timeout,
             handler.get(),&UIHandler::requestPredictionAsync);
 
-    Logger::normal() << "窗口初始化完成";
+    Log::normal() << "窗口初始化完成";
 
     // for testing
     ui->tabs->setUpdatesEnabled(false);
@@ -186,11 +186,11 @@ void MainWindow::setupLogPage()
         msgList->appendLine(text);
     };
 
-    auto logger = Logger::instance();
-    for (auto msg : logger->getMessages()) {
+    auto store = Log::LogStorage::instance();
+    for (auto msg : store->getMessages()) {
         addLogMessage(msg);
     }
-    connect(logger, &Logger::newLogMessage, this, addLogMessage);
+    connect(store, &Log::LogStorage::newLogMessage, this, addLogMessage);
 }
 
 void MainWindow::applyOptions()
@@ -205,7 +205,7 @@ void MainWindow::applyOptions()
     param.layers(layersModel->layers());
 
     currentParam = param;
-    Logger::normal("初始化\n网络");
+    Log::normal() << "应用参数...";
     handler->configure(param);
 }
 

@@ -55,7 +55,8 @@ void UIHandler::configure(const LearnParam &param)
 {
     if (configured_) dispose();
 
-    Logger::info() << param.toDebugString();
+    Log::info() << "正在配置网络...";
+    Log::info() << "网络参数：<br>" << param;
 
     task = new LearnTask(param);
 
@@ -86,9 +87,9 @@ void UIHandler::run()
     // set random seed
     RandomNumberGenerator().seed(task->parameters().randSeed());
 
-    Logger::normal() << "网络初始化...";
+    Log::normal() << "网络初始化...";
     task->network().initialize();
-    Logger::normal() << "网络初始化完成";
+    Log::normal() << "网络初始化完成";
 
     InterruptableLMA opt;
 
@@ -104,9 +105,9 @@ void UIHandler::run()
 
     while(step())
     {
-        Logger::info() << "第" << opt.currentIteration() << "次迭代，"
-                       << "Error = "
-                       << QStringLiteral("%1").arg(opt.currentError(), 0, 'g', 4);
+        Log::info() << "第" << opt.currentIteration() << "次迭代，"
+                    << "Error = "
+                    << QStringLiteral("%1").arg(opt.currentError(), 0, 'g', 4);
 
         double testError = 0.0;
         // compute testing error, ensure in testing mode
@@ -119,7 +120,7 @@ void UIHandler::run()
 
         QReadLocker locker(&lockForCancelFlag);
         if(cancelFlag) {
-            Logger::normal() << "训练中途取消";
+            Log::normal() << "训练中途取消";
             break;
         }
     }
