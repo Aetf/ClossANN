@@ -21,14 +21,14 @@ Q_GLOBAL_STATIC(LoggerStaticInitializer, loggerStaticInitializer)
 
 namespace Log
 {
-    Msg::Msg() {}
+Msg::Msg() {}
 
-    Msg::Msg(int id, MsgType type, const QString &message)
-        : id(id)
-        , timestamp(QDateTime::currentMSecsSinceEpoch())
-        , type(type)
-        , message(message)
-    { }
+Msg::Msg(int id, MsgType type, const QString &message)
+    : id(id)
+    , timestamp(QDateTime::currentMSecsSinceEpoch())
+    , type(type)
+    , message(message)
+{ }
 
 }
 

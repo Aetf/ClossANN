@@ -11,23 +11,23 @@ const int MAX_LOG_MESSAGES = 1000;
 class Logger;
 namespace Log
 {
-    enum MsgType
-    {
-        INFO,
-        NORMAL,
-        WARNING,
-        CRITICAL //ERROR is defined by libtorrent and results in compiler error
-    };
+enum MsgType
+{
+    INFO,
+    NORMAL,
+    WARNING,
+    CRITICAL //ERROR is defined by libtorrent and results in compiler error
+};
 
-    struct Msg
-    {
-        Msg();
-        Msg(int id, MsgType type, const QString &message);
-        int id;
-        qint64 timestamp;
-        MsgType type;
-        QString message;
-    };
+struct Msg
+{
+    Msg();
+    Msg(int id, MsgType type, const QString &message);
+    int id;
+    qint64 timestamp;
+    MsgType type;
+    QString message;
+};
 }
 Q_DECLARE_METATYPE(Log::MsgType)
 Q_DECLARE_METATYPE(Log::Msg)

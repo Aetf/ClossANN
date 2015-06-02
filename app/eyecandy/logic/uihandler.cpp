@@ -106,7 +106,7 @@ void UIHandler::run()
     opt.setStopCriteria(task->stopCriteria());
 
     // protect multithread access to data
-    auto step = [&](){
+    auto step = [&]() {
         // ensure data is in training mode
         auto ctx = task->data().enterTrainingMode(false);
         return opt.step();
@@ -115,8 +115,8 @@ void UIHandler::run()
     while(step())
     {
         Logger::info() << "第" << opt.currentIteration() << "次迭代，"
-                      << "Error = "
-                      << QStringLiteral("%1").arg(opt.currentError(), 0, 'g', 4);
+                       << "Error = "
+                       << QStringLiteral("%1").arg(opt.currentError(), 0, 'g', 4);
 
         double testError = 0.0;
         // compute testing error, ensure in testing mode

@@ -167,9 +167,11 @@ QVariant LayerDescModel::dataForColActFunc(int row, int role) const
 }
 
 QVariant LayerDescModel::headerData(int section, Qt::Orientation orientation,
-                                       int role) const
+                                    int role) const
 {
-    if (role != Qt::DisplayRole) { return QVariant(); }
+    if (role != Qt::DisplayRole) {
+        return QVariant();
+    }
 
     if (orientation != Qt::Horizontal) {
         return section + 1;
@@ -191,13 +193,17 @@ QVariant LayerDescModel::headerData(int section, Qt::Orientation orientation,
 
 int LayerDescModel::rowCount(const QModelIndex &parent) const
 {
-    if (parent.isValid()) { return 0; }
+    if (parent.isValid()) {
+        return 0;
+    }
     return layers_.size();
 }
 
 int LayerDescModel::columnCount(const QModelIndex &parent) const
 {
-    if (parent.isValid()) { return 0; }
+    if (parent.isValid()) {
+        return 0;
+    }
     return ColCount;
 }
 
@@ -282,8 +288,8 @@ bool LayerDescModel::removeRows(int row, int count, const QModelIndex &parent)
 bool LayerDescModel::inRange(const QModelIndex &index) const
 {
     return index.isValid()
-        && index.row() >= 0 && index.row() < layers_.size()
-        && index.column() >= 0 && index.column() < ColCount;
+           && index.row() >= 0 && index.row() < layers_.size()
+           && index.column() >= 0 && index.column() < ColCount;
 }
 
 void LayerDescModel::clear()

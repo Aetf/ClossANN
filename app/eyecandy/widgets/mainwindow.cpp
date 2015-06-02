@@ -49,7 +49,7 @@ MainWindow::MainWindow(QWidget *parent)
     // for testing
     ui->tabs->setUpdatesEnabled(false);
     for (int i = 1; i!= 8; i++) {
-        if (i == 4) continue;
+//        if (i == 4) continue;
         auto plot = new QCustomPlot;
         setupDemo(i, plot);
         ui->tabs->addTab(plot, demoName);
@@ -80,26 +80,26 @@ void MainWindow::setupOptionPage()
     // Group Net
     ui->btnRefreshSeed->setIcon(AwesomeIconProvider::instance()->icon(fa::refresh));
     connect(ui->spinLearnRate, Select<double>::OverloadOf(&QDoubleSpinBox::valueChanged),
-    this, [=](auto value) {
-        this->currentParam.learningRate(value);
+    this, [&](auto value) {
+        currentParam.learningRate(value);
     });
     connect(ui->lineRandSeed, &QLineEdit::textChanged,
     [&](auto text) {
         currentParam.randSeed(text.toUInt());
     });
     connect(ui->btnRefreshSeed, &QAbstractButton::clicked,
-    this, [=] {
+    this, [&] {
         ui->lineRandSeed->setText(QString::number(get_seed()));
     });
 
     // Group Closs
     connect(ui->spinKernelSize, Select<double>::OverloadOf(&QDoubleSpinBox::valueChanged),
-    this, [=](auto value) {
-        this->currentParam.kernelSize(value);
+    this, [&](auto value) {
+        currentParam.kernelSize(value);
     });
     connect(ui->spinPValue, Select<double>::OverloadOf(&QDoubleSpinBox::valueChanged),
-    this, [=](auto value) {
-        this->currentParam.pValue(value);
+    this, [&](auto value) {
+        currentParam.pValue(value);
     });
 
     // Group Data
@@ -140,13 +140,13 @@ void MainWindow::setupOptionPage()
             this, &MainWindow::updateButtons);
 
     connect(ui->btnInsertLayer, &QAbstractButton::clicked,
-    this, [=] {
-        auto pos = this->ui->tableNetStru->selectionModel()->currentIndex().row();
+    this, [&] {
+        auto pos = ui->tableNetStru->selectionModel()->currentIndex().row();
         layersModel->insertLayer(pos + 1, LayerDesc());
     });
     connect(ui->btnRemoveLayer, &QAbstractButton::clicked,
-    this, [=] {
-        auto pos = this->ui->tableNetStru->selectionModel()->currentIndex().row();
+    this, [&] {
+        auto pos = ui->tableNetStru->selectionModel()->currentIndex().row();
         layersModel->removeRows(pos, 1);
     });
 
@@ -211,7 +211,7 @@ void MainWindow::applyOptions()
 
 void MainWindow::displayDefaultOptions()
 {
-    LearnParam param;
+    LearnParam& param = currentParam;
     // Group Net
     ui->spinLearnRate->setValue(param.learningRate());
     ui->lineRandSeed->setText(QString::number(param.randSeed()));
@@ -865,8 +865,6 @@ void MainWindow::bracketDataSlot()
 
 void MainWindow::setupMonitorPage()
 {
-    demoName = "Closs ANN";
-
     setupProblemPlane(ui->plotColorMap);
     setupErrorLine(ui->plotErrorLine);
 }
@@ -904,7 +902,7 @@ QCPColorMap *MainWindow::createPredictMap(QCPAxis *xAxis, QCPAxis *yAxis, QCPCol
 
     // connect to data change signal
     connect(handler.get(), &UIHandler::predictionUpdated,
-    [=](auto data) {
+    [&](auto data) {
         for (auto item : data) {
             auto point = item.toList();
             int x, y;
@@ -1030,7 +1028,7 @@ void MainWindow::setupProblemPlane(QCustomPlot *plot)
 
     // postpone two scatters setup to after applying options
     connect(handler.get(), &UIHandler::inputRangeUpdated,
-    this, [=](auto min, auto max) {
+    this, [&](auto min, auto max) {
         QCPRange range(min, max);
         predictMap->data()->setRange(range, range);
         plot->xAxis->setRange(range);
@@ -1038,7 +1036,7 @@ void MainWindow::setupProblemPlane(QCustomPlot *plot)
     });
 
     connect(handler.get(), &UIHandler::outputRangeUpdated,
-    this, [=](auto min, auto max, auto labelsCount) {
+    this, [&](auto min, auto max, auto labelsCount) {
         // set prediction map data range
         scale->setDataRange(QCPRange(min, max));
 
@@ -1051,6 +1049,10 @@ void MainWindow::setupProblemPlane(QCustomPlot *plot)
 
 void MainWindow::setupErrorLine(QCustomPlot *plot)
 {
+    plot->setInteractions(QCP::iRangeDrag | QCP::iRangeZoom);
+    plot->legend->setVisible(true);
+    plot->setAutoAddPlottableToLegend(true);
+
     auto graphTrain = plot->addGraph();
     graphTrain->setPen(QPen(Qt::blue));
     graphTrain->setBrush(QBrush(QColor(150, 222, 0)));
@@ -1067,9 +1069,7 @@ void MainWindow::setupErrorLine(QCustomPlot *plot)
 
     // connect to relative signals
     connect(handler.get(), &UIHandler::iterationFinished,
-            this,
-            [graphTrain, graphTesting, plot](auto, auto iter,
-                                             auto error, auto testError){
+    this, [&](auto, auto iter, auto error, auto testError) {
         // training error
         graphTrain->addData(iter, error);
         graphTesting->addData(iter, testError);
@@ -1084,7 +1084,7 @@ void MainWindow::setupErrorLine(QCustomPlot *plot)
         plot->replot();
     });
     connect(handler.get(), &UIHandler::trainingStopped,
-            this, [graphTrain, graphTesting]{
+    this, [&] {
         graphTrain->clearData();
         graphTesting->clearData();
     });
