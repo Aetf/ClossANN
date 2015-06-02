@@ -6,17 +6,18 @@
 - [x] Implement log (done)
 - [x] Stop ability
 - [x] Do testing while training
-- [ ] Toggle training and testing data display
-- [ ] Save result about each run
-- [ ] Implement variable learning rate
+- [x] Option to use different error function
 - [ ] Determine CSV data source size dynamically
 - [x] Show training and testing data when not training
 - [x] ~~Integer x axis in error line (not possible in QCustomPlot 1.x)~~
 - [x] Abnormal exit when running (handle interupt in runAsync)
+- [ ] Save result about each run
 - [ ] Handle more option chooise (i.e. more layer type)
 - [ ] More figures
 - [x] Proper window size
+- [ ] Toggle training and testing data display
 - [ ] Log filter
+- [ ] Implement variable learning rate
 - [x] Dataset trainingmode multi-thread safe
 - [x] ~~Error line tracking mouse show point data (too complicate with QCustomPlot 1.x)~~
 - [ ] Prediction plane color fine tune

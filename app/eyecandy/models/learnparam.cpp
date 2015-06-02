@@ -6,6 +6,7 @@
 LearnParam::LearnParam(double learnRate, double kernelSize, double pValue)
     : dataSource_(DataSource::CSV)
     , csvFilePath_("/media/Documents/GradProject/data/VQdata.csv")
+    , errorFunc_(Closs)
     , learningRate_(learnRate)
     , kernelSize_(kernelSize)
     , pValue_(pValue)
@@ -18,6 +19,16 @@ LearnParam::LearnParam(double learnRate, double kernelSize, double pValue)
             << LayerDesc{LayerDesc::Output, 0, LayerDesc::TANH}; // Output
 }
 
+LearnParam::ErrorFunction LearnParam::errorFunc() const
+{
+    return errorFunc_;
+}
+
+LearnParam &LearnParam::errorFunc(LearnParam::ErrorFunction func)
+{
+    errorFunc_ = func;
+    return *this;
+}
 
 double LearnParam::learningRate() const
 {
@@ -126,18 +137,20 @@ QString LearnParam::toDebugString(int indent, char indentChar) const
 {
     QString str;
     QString ind(indent, indentChar);
+    QString ind2(4, indentChar);
     QTextStream out(&str);
 
     out << ind << "Data source:" << dataSource() << "\n";
     if (dataSource() == DataSource::CSV) {
         out << ind << "CSV file path:" << csvFilePath() << "\n";
     }
+    out << ind << "Error function:" << errorFunc() << "\n";
     out << ind << "Learning rate:" << learningRate() << "\n";
     out << ind << "Kernel size:" << kernelSize() << "\n";
     out << ind << "P value:" << pValue() << "\n";
     out << ind << "Layers:" << "\n";
     for (auto layer : layers()) {
-        out << ind << QString(4, indentChar)
+        out << ind << ind2
             << "Type:" << layer.type << ", "
             << "nUnit:" << layer.nUnit << ", "
             << "ActFunc:" << layer.activationFunc

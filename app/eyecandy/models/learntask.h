@@ -7,17 +7,20 @@
 class ClossNet;
 class UCWDataSet;
 namespace OpenANN {
+class Net;
 class StoppingCriteria;
 }
 
 using OpenANN::StoppingCriteria;
+using OpenANN::Net;
 
 class LearnTask
 {
 public:
     LearnTask(const LearnParam &param);
 
-    ClossNet &network();
+    ClossNet &clossNet();
+    Net &network();
     StoppingCriteria &stopCriteria();
     UCWDataSet &data();
 
@@ -27,7 +30,7 @@ protected:
     UCWDataSet *createDataSourceFromParam(const LearnParam &param);
 
 private:
-    unique_ptr<ClossNet> network_;
+    unique_ptr<Net> network_;
     unique_ptr<StoppingCriteria> stopCriteria_;
     unique_ptr<UCWDataSet> data_;
 

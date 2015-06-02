@@ -38,7 +38,15 @@ Q_DECLARE_METATYPE(LayerDesc)
 class LearnParam
 {
 public:
+    enum ErrorFunction{
+        MSE,
+        Closs
+    };
+
     LearnParam(double learningRate = 1, double kernelSize = 0.5, double pValue = 2);
+
+    ErrorFunction errorFunc() const;
+    LearnParam& errorFunc(ErrorFunction func);
 
     double learningRate() const;
     LearnParam& learningRate(double value);
@@ -81,6 +89,7 @@ private:
 
     StoppingCriteria stoppingCriteria_;
 
+    ErrorFunction errorFunc_;
     double learningRate_;
     double kernelSize_;
     double pValue_;

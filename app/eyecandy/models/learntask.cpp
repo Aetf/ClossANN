@@ -3,8 +3,6 @@
 #include "ClossNet.h"
 #include "OpenANN/OpenANN"
 
-using namespace OpenANN;
-
 LearnTask::LearnTask(const LearnParam &param)
 {
     // save param in case later use
@@ -17,12 +15,19 @@ LearnTask::LearnTask(const LearnParam &param)
     data_ = make_unique(createDataSourceFromParam(param));
 
     // Step 3. setup network
-    network_ = make_unique(new ClossNet);
+    switch (param.errorFunc()) {
+    case LearnParam::MSE:
+        network_ = make_unique(new Net);
+        break;
+    case LearnParam::Closs:
+        network_ = make_unique(new ClossNet);
+        // set parameters
+        clossNet().setKernelSize(param.kernelSize());
+        clossNet().setPValue(param.pValue());
+        clossNet().setLearningRate(param.learningRate());
+        break;
+    }
 
-    // set parameters
-    network_->setKernelSize(param.kernelSize());
-    network_->setPValue(param.pValue());
-    network_->setLearningRate(param.learningRate());
     // initialize MLP
     for (auto layer : param.layers()) {
         switch (layer.type) {
@@ -59,9 +64,14 @@ UCWDataSet *LearnTask::createDataSourceFromParam(const LearnParam &param)
     return source;
 }
 
-ClossNet &LearnTask::network()
+Net &LearnTask::network()
 {
     return *network_;
+}
+
+ClossNet &LearnTask::clossNet()
+{
+    return *static_cast<ClossNet*>(network_.get());
 }
 
 StoppingCriteria &LearnTask::stopCriteria()

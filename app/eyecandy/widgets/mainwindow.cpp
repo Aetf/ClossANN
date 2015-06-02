@@ -91,6 +91,16 @@ void MainWindow::setupOptionPage()
     this, [=] {
         ui->lineRandSeed->setText(QString::number(get_seed()));
     });
+    connect(ui->comboErrorFunc, Select<int>::OverloadOf(&QComboBox::currentIndexChanged),
+    this, [=]() {
+        auto func = LearnParam::ErrorFunction(ui->comboErrorFunc->currentData().toInt());
+        currentParam.errorFunc(func);
+
+        auto enableCloss = (func == LearnParam::Closs);
+        ui->groupCloss->setEnabled(enableCloss);
+    });
+    ui->comboErrorFunc->addItem("Closs", LearnParam::Closs);
+    ui->comboErrorFunc->addItem("MSE", LearnParam::MSE);
 
     // Group Closs
     connect(ui->spinKernelSize, Select<double>::OverloadOf(&QDoubleSpinBox::valueChanged),
@@ -150,10 +160,6 @@ void MainWindow::setupOptionPage()
         layersModel->removeRows(pos, 1);
     });
 
-    // Apply button
-    connect(ui->btnApplyConfig, &QAbstractButton::clicked,
-            this, &MainWindow::applyOptions);
-
     displayDefaultOptions();
 }
 
@@ -195,41 +201,35 @@ void MainWindow::setupLogPage()
 
 void MainWindow::applyOptions()
 {
-    auto param = LearnParam()
-                 .dataSource(DataSource(ui->comboDataSource->currentData().toInt()))
-                 .csvFilePath(ui->lineCSVFile->text())
-                 .learningRate(ui->spinLearnRate->value())
-                 .kernelSize(ui->spinKernelSize->value())
-                 .pValue(ui->spinPValue->value())
-                 .randSeed(ui->lineRandSeed->text().toUInt());
-    param.layers(layersModel->layers());
+    currentParam.layers(layersModel->layers());
 
-    currentParam = param;
     Log::normal() << "应用参数...";
-    handler->configure(param);
+    handler->configure(currentParam);
 }
 
 void MainWindow::displayDefaultOptions()
 {
-    LearnParam& param = currentParam;
     // Group Net
-    ui->spinLearnRate->setValue(param.learningRate());
-    ui->lineRandSeed->setText(QString::number(param.randSeed()));
+    ui->spinLearnRate->setValue(currentParam.learningRate());
+    ui->lineRandSeed->setText(QString::number(currentParam.randSeed()));
+    ui->comboErrorFunc->setCurrentIndex(
+                ui->comboErrorFunc->findData(currentParam.errorFunc()));
 
     // Group Closs
-    ui->spinKernelSize->setValue(param.kernelSize());
-    ui->spinPValue->setValue(param.pValue());
+    ui->spinKernelSize->setValue(currentParam.kernelSize());
+    ui->spinPValue->setValue(currentParam.pValue());
 
     // Group Data
-    ui->comboDataSource->setCurrentIndex(ui->comboDataSource->findData(param.dataSource()));
-    ui->lineCSVFile->setText(param.csvFilePath());
+    ui->comboDataSource->setCurrentIndex(
+                ui->comboDataSource->findData(currentParam.dataSource()));
+    ui->lineCSVFile->setText(currentParam.csvFilePath());
 
     // Group Net Structure
     layersModel->removeRows(0, layersModel->rowCount());
-    layersModel->insertRows(0, param.layers().size());
-    for (int i = 0; i!= param.layers().size(); i++) {
+    layersModel->insertRows(0, currentParam.layers().size());
+    for (int i = 0; i!= currentParam.layers().size(); i++) {
         QVariant v;
-        v.setValue(param.layers()[i]);
+        v.setValue(currentParam.layers()[i]);
         layersModel->setData(layersModel->index(i, 0), v, LayerDescModel::LayerDataRole);
     }
     ui->tableNetStru->selectRow(0);
@@ -809,9 +809,7 @@ void MainWindow::setupAdvancedAxesDemo(QCustomPlot *customPlot)
 
 void MainWindow::trainClossNN()
 {
-    if (!handler->configured()) {
-        applyOptions();
-    }
+    applyOptions();
     handler->runAsync();
     predictionTimer.start(200);
 }
