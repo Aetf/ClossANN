@@ -80,31 +80,31 @@ void MainWindow::setupOptionPage()
     // Group Net
     ui->btnRefreshSeed->setIcon(AwesomeIconProvider::instance()->icon(fa::refresh));
     connect(ui->spinLearnRate, Select<double>::OverloadOf(&QDoubleSpinBox::valueChanged),
-    this, [&](auto value) {
+    this, [=](auto value) {
         currentParam.learningRate(value);
     });
     connect(ui->lineRandSeed, &QLineEdit::textChanged,
-    [&](auto text) {
+    [=](auto text) {
         currentParam.randSeed(text.toUInt());
     });
     connect(ui->btnRefreshSeed, &QAbstractButton::clicked,
-    this, [&] {
+    this, [=] {
         ui->lineRandSeed->setText(QString::number(get_seed()));
     });
 
     // Group Closs
     connect(ui->spinKernelSize, Select<double>::OverloadOf(&QDoubleSpinBox::valueChanged),
-    this, [&](auto value) {
+    this, [=](auto value) {
         currentParam.kernelSize(value);
     });
     connect(ui->spinPValue, Select<double>::OverloadOf(&QDoubleSpinBox::valueChanged),
-    this, [&](auto value) {
+    this, [=](auto value) {
         currentParam.pValue(value);
     });
 
     // Group Data
     connect(ui->comboDataSource, Select<int>::OverloadOf(&QComboBox::currentIndexChanged),
-    this, [&]() {
+    this, [=]() {
         auto source = DataSource(ui->comboDataSource->currentData().toInt());
         currentParam.dataSource(source);
 
@@ -116,11 +116,11 @@ void MainWindow::setupOptionPage()
     ui->comboDataSource->addItem("CSV", DataSource::CSV);
 
     connect(ui->lineCSVFile, &QLineEdit::textChanged,
-    this, [&](auto text) {
+    this, [=](auto text) {
         currentParam.csvFilePath(text);
     });
     connect(ui->btnCSVBrowse, &QAbstractButton::clicked,
-    this, [&]() {
+    this, [=]() {
         auto path = QFileDialog::getOpenFileName(this, tr("打开CSV数据文件"),
                     "",
                     tr("CSV 文件(*.csv)"));
@@ -140,12 +140,12 @@ void MainWindow::setupOptionPage()
             this, &MainWindow::updateButtons);
 
     connect(ui->btnInsertLayer, &QAbstractButton::clicked,
-    this, [&] {
+    this, [=] {
         auto pos = ui->tableNetStru->selectionModel()->currentIndex().row();
         layersModel->insertLayer(pos + 1, LayerDesc());
     });
     connect(ui->btnRemoveLayer, &QAbstractButton::clicked,
-    this, [&] {
+    this, [=] {
         auto pos = ui->tableNetStru->selectionModel()->currentIndex().row();
         layersModel->removeRows(pos, 1);
     });
@@ -205,7 +205,7 @@ void MainWindow::applyOptions()
     param.layers(layersModel->layers());
 
     currentParam = param;
-    Logger::normal("初始化网络");
+    Logger::normal("初始化\n网络");
     handler->configure(param);
 }
 
@@ -902,7 +902,7 @@ QCPColorMap *MainWindow::createPredictMap(QCPAxis *xAxis, QCPAxis *yAxis, QCPCol
 
     // connect to data change signal
     connect(handler.get(), &UIHandler::predictionUpdated,
-    [&](auto data) {
+    [=](auto data) {
         for (auto item : data) {
             auto point = item.toList();
             int x, y;
@@ -1028,7 +1028,7 @@ void MainWindow::setupProblemPlane(QCustomPlot *plot)
 
     // postpone two scatters setup to after applying options
     connect(handler.get(), &UIHandler::inputRangeUpdated,
-    this, [&](auto min, auto max) {
+    this, [=](auto min, auto max) {
         QCPRange range(min, max);
         predictMap->data()->setRange(range, range);
         plot->xAxis->setRange(range);
@@ -1036,7 +1036,7 @@ void MainWindow::setupProblemPlane(QCustomPlot *plot)
     });
 
     connect(handler.get(), &UIHandler::outputRangeUpdated,
-    this, [&](auto min, auto max, auto labelsCount) {
+    this, [=](auto min, auto max, auto labelsCount) {
         // set prediction map data range
         scale->setDataRange(QCPRange(min, max));
 
@@ -1069,7 +1069,7 @@ void MainWindow::setupErrorLine(QCustomPlot *plot)
 
     // connect to relative signals
     connect(handler.get(), &UIHandler::iterationFinished,
-    this, [&](auto, auto iter, auto error, auto testError) {
+    this, [=](auto, auto iter, auto error, auto testError) {
         // training error
         graphTrain->addData(iter, error);
         graphTesting->addData(iter, testError);
@@ -1084,7 +1084,7 @@ void MainWindow::setupErrorLine(QCustomPlot *plot)
         plot->replot();
     });
     connect(handler.get(), &UIHandler::trainingStopped,
-    this, [&] {
+    this, [=]{
         graphTrain->clearData();
         graphTesting->clearData();
     });
