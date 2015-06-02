@@ -18,7 +18,7 @@
 - [x] Proper window size
 - [ ] Log filter
 - [x] Dataset trainingmode multi-thread safe
-- [ ] Error line tracking mouse show point data
+- [x] ~~Error line tracking mouse show point data (too complicate with QCustomPlot 1.x)~~
 - [ ] Prediction plane color fine tune
-- [ ] Connect func for unique_ptr
+- [x] ~~Connect func for unique_ptr (no use)~~
 - [ ] Rework eyecandy libs include to use function
