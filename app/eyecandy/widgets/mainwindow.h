@@ -32,14 +32,6 @@ public:
     explicit MainWindow(QWidget *parent = 0);
     ~MainWindow();
 
-    void setupDemo(int demoIndex, QCustomPlot *plot);
-    void setupScatterStyleDemo(QCustomPlot *customPlot);
-    void setupParametricCurveDemo(QCustomPlot *customPlot);
-    void setupBarChartDemo(QCustomPlot *customPlot);
-    void setupItemDemo(QCustomPlot *customPlot);
-    void setupStyledDemo(QCustomPlot *customPlot);
-    void setupAdvancedAxesDemo(QCustomPlot *customPlot);
-
     void setupProblemPlane(QCustomPlot *plot);
     void setupErrorLine(QCustomPlot *plot);
 
@@ -61,7 +53,6 @@ protected:
     void setupTestingGraph(QCustomPlot *plot, range outputRange, int labelsCount);
 
 private slots:
-    void bracketDataSlot();
     void screenShot();
     void updateButtons(const QModelIndex &curr, const QModelIndex &prev);
 
@@ -74,6 +65,7 @@ private:
     QCPColorMap *predictMap;
     QCPGraph *trainingGraph;
     QCPGraph *testingGraph;
+    double lastIterTime;
     QString demoName;
     QTimer predictionTimer;
     QTimer dataTimer2;
