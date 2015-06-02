@@ -37,8 +37,8 @@ public slots:
     void requestPrediction(bool async = true);
     void requestPredictionAsync();
 
-    inline bool configured() const;
-    inline bool training() const;
+    inline bool configured() const { return configured_; }
+    inline bool training() const { return running_; }
 
     QVariantList getTrainingSet();
     QVariantList getTestingSet();

@@ -68,16 +68,6 @@ void UIHandler::configure(const LearnParam &param)
     requestPrediction(false);
 }
 
-bool UIHandler::configured() const
-{
-    return configured_;
-}
-
-bool UIHandler::training() const
-{
-    return running_;
-}
-
 void UIHandler::runAsync()
 {
     if (!configured_) return;
