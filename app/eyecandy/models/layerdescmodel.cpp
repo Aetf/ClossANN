@@ -25,6 +25,14 @@ Qt::ItemFlags LayerDescModel::flags(const QModelIndex &index) const
             return layer.type == LayerDesc::Input ? normal : editable;
         }
         case Col_UnitCount:
+        {
+            auto layer = data(index, LayerDataRole).value<LayerDesc>();
+            if (layer.type == LayerDesc::Output) {
+                return normal;
+            } else {
+                return editable;
+            }
+        }
         case Col_Type:
         {
             auto layer = data(index, LayerDataRole).value<LayerDesc>();
@@ -91,16 +99,6 @@ QVariant LayerDescModel::dataForColUnit(int row, int role) const
 {
     switch (role) {
     case Qt::DisplayRole:
-    {
-        auto layer = layers_[row];
-        if (layer.type == LayerDesc::Input) {
-            return "-";
-        } else if (layer.type == LayerDesc::Output) {
-            return "-";
-        } else {
-            return layer.nUnit;
-        }
-    }
     case Qt::EditRole:
         return layers_[row].nUnit;
     default:

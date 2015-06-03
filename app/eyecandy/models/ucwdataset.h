@@ -67,16 +67,15 @@ public:
     int outputLabelCount() const;
 
     /**
-     * Creates moon shape dataset that form two classes.
+     * Creates dataset csv file.
+     * with following constrain:
+     * nInput + nOutput <= 10
      *
-     * @param density higher densities result in greater data sets
-     * @param maxDiameter diameter of the points on the outer side of the spirals
-     * @param trainInputs training inputs
-     * @param trainOutputs training outputs
-     * @param testInputs test inputs
-     * @param testOutputs test outputs
+     * @param filePath path to the csv file
+     * @param nInput number of input units
+     * @param nOutput number of output units
      */
-    bool generateCSV(QString filePath);
+    bool generateCSV(QString filePath, int nInput = 2, int nOutput = 1);
 
     /**
      * Creates two interlocked spirals that form different classes.
@@ -87,10 +86,6 @@ public:
      *
      * @param density higher densities result in greater data sets
      * @param maxDiameter diameter of the points on the outer side of the spirals
-     * @param trainInputs training inputs
-     * @param trainOutputs training outputs
-     * @param testInputs test inputs
-     * @param testOutputs test outputs
      */
     bool generateTwoSpirals(int density = 2, double maxDiameter = 1.0);
 

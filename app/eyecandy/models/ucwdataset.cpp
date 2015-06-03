@@ -1,5 +1,7 @@
 #include "ucwdataset.h"
 #include "utils/utils.h"
+#include "utils/logger.h"
+#include "utils/dyncsvreader.h"
 #include <OpenANN/Learner.h>
 #include <OpenANN/Preprocessing.h>
 #include <OpenANN/util/AssertionMacros.h>
@@ -8,14 +10,9 @@
 #include <QDebug>
 #include <QFile>
 
-#define CSV_IO_NO_THREAD
-#include "csv.h"
-
-namespace csv = io;
-using namespace OpenANN;
 using Eigen::MatrixXd;
 using Eigen::VectorXd;
-using csv::CSVReader;
+using CSV::DynCsvReader;
 using ContextManager = UCWDataSet::ContextManager;
 
 UCWDataSet::UCWDataSet(DataSource source)
@@ -112,6 +109,8 @@ void UCWDataSet::inTrainingMode(bool val)
 
 bool UCWDataSet::generateNone()
 {
+    Log::warning() << "Generating empty data set!";
+
     trainingIn.resize(0, 2);
     trainingOut.resize(0, 1);
     testingIn.resize(0, 2);
@@ -184,38 +183,74 @@ bool UCWDataSet::generateTwoSpirals(int density, double maxDiameter)
     return true;
 }
 
-bool UCWDataSet::generateCSV(QString filePath)
+bool UCWDataSet::generateCSV(QString filePath, int nInput, int nOutput)
 {
-    trainingIn.resize(200, 2);
-    trainingOut.resize(200, 1);
-    testingIn.resize(0, 2);
-    testingOut.resize(0, 1);
+    const int MAX_COLUMN = 9;
+    if (nInput + nOutput > MAX_COLUMN) {
+        Log::critical() << "generateCSV: nInput(" << nInput << ")"
+                        << "+ nOutput(" << nOutput << ") "
+                        << "larger than MAX_COLUMN("<< MAX_COLUMN << ")!";
+        return generateNone();
+    }
+    struct row{
+        double c[MAX_COLUMN];
+    };
+    QList<row> data;
 
     try
     {
-        CSVReader<3> reader(filePath.toLocal8Bit().data());
-        reader.set_header("x", "y", "z");
+        auto reader = DynCsvReader::getReader(nInput+nOutput, filePath.toLocal8Bit().data());
 
         // read in each line
-        double x, y, z;
-        int rowIndex = 0;
-        while (reader.read_row(x, y, z))
+        row r;
+        while (reader->readRow(r.c))
         {
-            trainingIn.row(rowIndex) << x, y;
-            trainingOut.row(rowIndex) << z;
-            rowIndex++;
+            data << r;
         }
-
-        OpenANN::scaleData(trainingIn, -1.5, 1.5);
-        inputRange_ = {-1.5, 1.5};
-        outputRange_ = {-1.0, 1.0};
-        outputLabelCount_ = 2;
     }
-    catch (csv::error::can_not_open_file e)
+    catch (CSV::Exceptions::FileNotFound)
     {
-        qDebug() << e.what();
+        Log::critical() << "CSV file not found: " << filePath;
         return generateNone();
     }
+
+//    int nTest = data.size() / 2;
+    int nTest = 0;
+    int nTraining = data.size() - nTest;
+    trainingIn.resize(nTraining, nInput);
+    trainingOut.resize(nTraining, nOutput);
+    testingIn.resize(nTest, nInput);
+    testingOut.resize(nTest, nOutput);
+
+    int rowIdx;
+    int rowTraining = 0;
+    int rowTesting = 0;
+    for (rowIdx = 0; rowIdx!= nTraining; rowIdx++)
+    {
+        int c;
+        for (c = 0; c!= nInput; c++)
+            trainingIn(rowTraining, c) = data.at(rowIdx).c[c];
+        for (; c!= nInput + nOutput; c++)
+            trainingOut(rowTraining, c - nInput) = data.at(rowIdx).c[c];
+        rowTraining++;
+    }
+    for (; rowIdx!= nTest + nTraining; rowIdx++)
+    {
+        int c;
+        for (c = 0; c!= nInput; c++)
+            testingIn(rowTesting, c) = data.at(rowIdx).c[c];
+        for (; c!= nInput + nOutput; c++)
+            testingOut(rowTesting, c - nInput) = data.at(rowIdx).c[c];
+        rowTesting++;
+    }
+
+    if (nTraining)
+        OpenANN::scaleData(trainingIn, -1.5, 1.5);
+    if (nTest)
+        OpenANN::scaleData(testingIn, -1.5, 1.5);
+    inputRange_ = {-1.5, 1.5};
+    outputRange_ = {-1.0, 1.0};
+    outputLabelCount_ = 2 * nOutput;
 
     createInternalDataSet();
     return true;

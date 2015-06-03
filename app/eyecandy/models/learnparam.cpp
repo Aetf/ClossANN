@@ -13,10 +13,10 @@ LearnParam::LearnParam(double learnRate, double kernelSize, double pValue)
     , randSeed_(get_seed())
 {
     stoppingCriteria_.maximalIterations = 10000;
-    layers_ << LayerDesc{LayerDesc::Input, 0, LayerDesc::LINEAR} // Input
+    layers_ << LayerDesc{LayerDesc::Input, 2, LayerDesc::LINEAR} // Input
             << LayerDesc{LayerDesc::FullyConnected, 20, LayerDesc::TANH}
             << LayerDesc{LayerDesc::FullyConnected, 20, LayerDesc::TANH}
-            << LayerDesc{LayerDesc::Output, 0, LayerDesc::TANH}; // Output
+            << LayerDesc{LayerDesc::Output, 1, LayerDesc::TANH}; // Output
 }
 
 LearnParam::ErrorFunction LearnParam::errorFunc() const

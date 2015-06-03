@@ -7,7 +7,7 @@
 - [x] Stop ability
 - [x] Do testing while training
 - [x] Option to use different error function
-- [ ] Determine CSV data source size dynamically
+- [x] Determine CSV data source size dynamically
 - [x] More figures
 - [x] Show training and testing data when not training
 - [x] ~~Integer x axis in error line (not possible in QCustomPlot 1.x)~~
