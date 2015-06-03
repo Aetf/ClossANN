@@ -5,7 +5,7 @@ project(ClossANN)
 include(cmake/Utilities.cmake)
 list(APPEND CMAKE_MODULE_PATH ${PROJECT_SOURCE_DIR}/cmake)
 find_package(OpenANN)
-if(NOT OPENANN_FOUND)
+if(NOT OpenANN_FOUND)
     message(FATAL_ERROR "Could not find OpenANN library. You can either "
                         "install it with your package management system or "
                         "download it from http://github.com/OpenANN/OpenANN and "
