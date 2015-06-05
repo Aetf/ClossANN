@@ -13,6 +13,7 @@
 - [x] ~~Integer x axis in error line (not possible in QCustomPlot 1.x)~~
 - [x] Abnormal exit when running (handle interupt in runAsync)
 - [ ] Save result about each run
+- [ ] Move training run to LearnTask
 - [x] Proper window size
 - [ ] Toggle training and testing data display
 - [ ] Log filter
