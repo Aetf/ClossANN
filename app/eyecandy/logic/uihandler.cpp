@@ -125,6 +125,8 @@ void UIHandler::run()
         }
     }
     opt.result();
+
+    computeMeanMisclassificationPossibility();
 }
 
 void UIHandler::onTrainingFinished()
@@ -226,6 +228,24 @@ void UIHandler::generatePrediction(Learner& learner)
         }
     }
     emit predictionUpdated(prediction);
+}
+
+void UIHandler::computeMeanMisclassificationPossibility()
+{
+    auto ctx = task->data().enterTestingMode();
+    int correct = task->data().samples();
+    if (!correct) return;
+
+    for (int i = 0; i!= task->data().samples(); i++) {
+        auto in = task->data().getInstance(i);
+        auto desired = task->data().getTarget(i);
+        auto out = task->network()(in);
+
+        if (!match(out, desired)) --correct;
+    }
+    Log::normal() << "在测试集上的误分类率为 "
+                  << (correct * 100.0 / task->data().samples())
+                  << "%";
 }
 
 void UIHandler::sendTrainingDataUpdated()

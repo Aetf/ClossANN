@@ -57,6 +57,9 @@ protected slots:
     void onIterationFinished();
     void generatePrediction(Learner& learner);
 
+protected:
+    void computeMeanMisclassificationPossibility();
+
 private:
     void sendTrainingDataUpdated();
     void sendTestingDataUpdated();

@@ -4,6 +4,7 @@
 #include <memory>
 #include <QMetaObject>
 #include <QObject>
+#include <Eigen/Core>
 using std::unique_ptr;
 
 class Utils
@@ -27,5 +28,9 @@ template<typename... Args> struct Select
 };
 
 unsigned int get_seed();
+
+bool fuzzyCompare(double d1, double d2, double gate = 1e-30);
+
+bool match(const Eigen::VectorXd &out, const Eigen::VectorXd &desired);
 
 #endif // UTILS_H
