@@ -39,11 +39,11 @@ LogStorage *LogStorage::instance()
     return loggerStaticInitializer->instance;
 }
 
-void LogStorage::addMessage(const QString &message, const Log::MsgType &type)
+void LogStorage::addMessage(const QString &message, const MsgType &type)
 {
     QWriteLocker locker(&lock);
 
-    Log::Msg temp(msgCounter++, type, message);
+    Msg temp(msgCounter++, type, message);
     m_messages.push_back(temp);
 
     if (m_messages.size() >= MAX_LOG_MESSAGES)
@@ -52,7 +52,7 @@ void LogStorage::addMessage(const QString &message, const Log::MsgType &type)
     emit newLogMessage(temp);
 }
 
-QVector<Log::Msg> LogStorage::getMessages(int lastKnownId) const
+QVector<Msg> LogStorage::getMessages(int lastKnownId) const
 {
     QReadLocker locker(&lock);
 
@@ -63,7 +63,7 @@ QVector<Log::Msg> LogStorage::getMessages(int lastKnownId) const
         return m_messages;
 
     if (diff <= 0)
-        return QVector<Log::Msg>();
+        return QVector<Msg>();
 
     return m_messages.mid(size - diff);
 }

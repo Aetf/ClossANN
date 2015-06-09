@@ -39,17 +39,17 @@ public:
 
     static LogStorage* instance();
 
-    void addMessage(const QString &message, const Log::MsgType &type = Log::NORMAL);
+    void addMessage(const QString &message, const MsgType &type = NORMAL);
 
-    QVector<Log::Msg> getMessages(int lastKnownId = -1) const;
+    QVector<Msg> getMessages(int lastKnownId = -1) const;
 
 signals:
-    void newLogMessage(const Log::Msg &message);
+    void newLogMessage(const Msg &message);
 
 private:
     LogStorage();
 
-    QVector<Log::Msg> m_messages;
+    QVector<Msg> m_messages;
     mutable QReadWriteLock lock;
     int msgCounter;
 };
@@ -57,18 +57,18 @@ private:
 class Logger {
 
     struct Stream {
-        Stream (LogStorage *s, Log::MsgType t)
+        Stream (LogStorage *s, MsgType t)
             : store(s), type(t), ts(&buffer, QIODevice::WriteOnly), ref(1) {}
 
         LogStorage *store;
-        Log::MsgType type;
+        MsgType type;
         QString buffer;
         QTextStream ts;
         int ref;
     } *stream;
 
 public:
-    inline Logger(LogStorage *storage, Log::MsgType type) : stream(new Stream(storage, type)) {}
+    inline Logger(LogStorage *storage, MsgType type) : stream(new Stream(storage, type)) {}
     inline Logger(const Logger &o) : stream(o.stream) { ++stream->ref; }
     ~Logger();
 
