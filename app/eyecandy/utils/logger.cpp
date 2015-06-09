@@ -14,7 +14,7 @@ private:
 public:
     LoggerStaticInitializer()
     {
-        qRegisterMetaType<Msg>();
+        qRegisterMetaType<Msg>("Msg");
         instance = new LogStorage;
     }
 };

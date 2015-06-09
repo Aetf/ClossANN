@@ -34,7 +34,7 @@ MainWindow::MainWindow(QWidget *parent)
     , predictMap(nullptr)
     , trainingGraph(nullptr)
     , testingGraph(nullptr)
-    , disablePredict(true)
+    , disablePredict(false)
 {
     ui->setupUi(this);
     setupToolbar();
