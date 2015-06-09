@@ -19,7 +19,7 @@ namespace CSV
 class DynCsvReader
 {
 public:
-    static unique_ptr<DynCsvReader> getReader(int columnCount, const char *file);
+    static unique_ptr<DynCsvReader> createReader(int columnCount, const char *file);
 
     virtual bool readRow(double *columns) = 0;
 };

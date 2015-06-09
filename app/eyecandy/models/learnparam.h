@@ -83,6 +83,7 @@ public:
     void debugPrint() const;
     QString toDebugString(int indent = 4, char indentChar = ' ') const;
 
+    bool disablePredict;
 private:
     DataSource dataSource_;
     QString csvFilePath_;

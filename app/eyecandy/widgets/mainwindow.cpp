@@ -34,6 +34,7 @@ MainWindow::MainWindow(QWidget *parent)
     , predictMap(nullptr)
     , trainingGraph(nullptr)
     , testingGraph(nullptr)
+    , disablePredict(true)
 {
     ui->setupUi(this);
     setupToolbar();
@@ -41,8 +42,9 @@ MainWindow::MainWindow(QWidget *parent)
     setupMonitorPage();
     setupLogPage();
 
-    connect(&predictionTimer, &QTimer::timeout,
-            handler.get(),&UIHandler::requestPredictionAsync);
+    if (!disablePredict)
+        connect(&predictionTimer, &QTimer::timeout,
+                handler.get(),&UIHandler::requestPredictionAsync);
 
     Log::normal() << "窗口初始化完成";
 }
@@ -191,13 +193,15 @@ void MainWindow::setupLogPage()
 
 void MainWindow::setupMonitorPage()
 {
-    setupProblemPlane(ui->plotColorMap);
+    if (!disablePredict)
+        setupProblemPlane(ui->plotColorMap);
     setupErrorLine(ui->plotErrorLine);
 }
 
 void MainWindow::applyOptions()
 {
     currentParam.layers(layersModel->layers());
+    currentParam.disablePredict = disablePredict;
 
     Log::normal() << "应用参数...";
     handler->configure(currentParam);
@@ -251,12 +255,14 @@ void MainWindow::trainClossNN()
     applyOptions();
     lastIterTime = QDateTime::currentDateTime().toMSecsSinceEpoch()/1000.0;
     handler->runAsync();
-    predictionTimer.start(200);
+    if (!disablePredict)
+        predictionTimer.start(200);
 }
 
 void MainWindow::stopTraining()
 {
-    predictionTimer.stop();
+    if (!disablePredict)
+        predictionTimer.stop();
     handler->terminateTraining();
 }
 

@@ -185,7 +185,7 @@ bool UCWDataSet::generateTwoSpirals(int density, double maxDiameter)
 
 bool UCWDataSet::generateCSV(QString filePath, int nInput, int nOutput)
 {
-    const int MAX_COLUMN = 9;
+    const int MAX_COLUMN = 13;
     if (nInput + nOutput > MAX_COLUMN) {
         Log::critical() << "generateCSV: nInput(" << nInput << ")"
                         << "+ nOutput(" << nOutput << ") "
@@ -199,7 +199,7 @@ bool UCWDataSet::generateCSV(QString filePath, int nInput, int nOutput)
 
     try
     {
-        auto reader = DynCsvReader::getReader(nInput+nOutput, filePath.toLocal8Bit().data());
+        auto reader = DynCsvReader::createReader(nInput+nOutput, filePath.toLocal8Bit().data());
 
         // read in each line
         row r;
@@ -214,8 +214,8 @@ bool UCWDataSet::generateCSV(QString filePath, int nInput, int nOutput)
         return generateNone();
     }
 
-//    int nTest = data.size() / 2;
-    int nTest = 0;
+    int nTest = data.size() / 2;
+//    int nTest = 0;
     int nTraining = data.size() - nTest;
     trainingIn.resize(nTraining, nInput);
     trainingOut.resize(nTraining, nOutput);
@@ -253,6 +253,8 @@ bool UCWDataSet::generateCSV(QString filePath, int nInput, int nOutput)
     outputLabelCount_ = 2 * nOutput;
 
     createInternalDataSet();
+    qDebug() << "nTraining is " << nTraining;
+    qDebug() << "nTesting is " << nTest;
     return true;
 }
 

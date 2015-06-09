@@ -66,7 +66,9 @@ void UIHandler::configure(const LearnParam &param)
     sendOutputRangeUpdated();
     sendTrainingDataUpdated();
     sendTestingDataUpdated();
-    requestPrediction(false);
+
+    if (!param.disablePredict)
+        requestPrediction(false);
 }
 
 void UIHandler::runAsync()
@@ -112,6 +114,7 @@ void UIHandler::run()
         double testError = 0.0;
         // compute testing error, ensure in testing mode
         auto ctx = task->data().enterTestingMode(false);
+        task->network().trainingSet(task->data());
         if (task->data().samples() > 0) {
             testError = task->network().error();
         }
@@ -204,7 +207,8 @@ QVariantList UIHandler::getTestingSet()
 
 void UIHandler::onIterationFinished()
 {
-    generatePrediction(task->network());
+    if (predictionInRequest)
+        generatePrediction(task->network());
 }
 
 void UIHandler::generatePrediction(Learner& learner)
@@ -244,7 +248,7 @@ void UIHandler::computeMeanMisclassificationPossibility()
         if (!match(out, desired)) --correct;
     }
     Log::normal() << "在测试集上的误分类率为 "
-                  << (correct * 100.0 / task->data().samples())
+                  << (100.0 - correct * 100.0 / task->data().samples())
                   << "%";
 }
 

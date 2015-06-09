@@ -56,7 +56,9 @@ UCWDataSet *LearnTask::createDataSourceFromParam(const LearnParam &param)
         source->generateTwoSpirals();
         break;
     case UCWDataSet::CSV:
-        source->generateCSV(param.csvFilePath());
+        source->generateCSV(param.csvFilePath(),
+                            param.layers().first().nUnit,
+                            param.layers().last().nUnit);
         break;
     default:
         break;

@@ -4,7 +4,8 @@
 #include "utils/utils.h"
 
 LearnParam::LearnParam(double learnRate, double kernelSize, double pValue)
-    : dataSource_(DataSource::CSV)
+    : disablePredict(true)
+    , dataSource_(DataSource::CSV)
     , csvFilePath_("/media/Documents/GradProject/data/VQdata.csv")
     , errorFunc_(Closs)
     , learningRate_(learnRate)

@@ -15,6 +15,10 @@ using csv::CSVReader;
 #define NUMBER7(_) NUMBER6(_) _(6)
 #define NUMBER8(_) NUMBER7(_) _(7)
 #define NUMBER9(_) NUMBER8(_) _(8)
+#define NUMBER10(_) NUMBER9(_) _(9)
+#define NUMBER11(_) NUMBER10(_) _(10)
+#define NUMBER12(_) NUMBER11(_) _(11)
+#define NUMBER13(_) NUMBER12(_) _(12)
 
 #define COLUMNAT(X) ,columns[X]
 #define COLUMNNAME(X) ,#X
@@ -47,9 +51,9 @@ public: \
     } \
 };
 
-NUMBER9(DynCsvReaderImpl)
+NUMBER13(DynCsvReaderImpl)
 
-unique_ptr<DynCsvReader> DynCsvReader::getReader(int columnCount, const char *file)
+unique_ptr<DynCsvReader> DynCsvReader::createReader(int columnCount, const char *file)
 {
     switch (columnCount)
     {
@@ -57,7 +61,7 @@ unique_ptr<DynCsvReader> DynCsvReader::getReader(int columnCount, const char *fi
     case X: \
         return make_unique(new DynCsvReader##X(file));
 
-    NUMBER9(CASE)
+    NUMBER13(CASE)
 
 #undef CASE
     default:

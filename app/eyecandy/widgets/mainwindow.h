@@ -72,6 +72,8 @@ private:
     QCustomPlot *bracketPlot;
     QCPItemTracer *itemDemoPhaseTracer;
 
+    bool disablePredict;
+
     LearnParam currentParam;
     int currentDemoIndex;
 };
