@@ -382,7 +382,7 @@ Eigen::MatrixXd ClossNet::clossFunction(const Eigen::MatrixBase<Derived> &YmT)
     double lambda = -1 / (2 * kernelSize * kernelSize);
     double beta = 1 / (1 - exp(lambda));
 //    Eigen::MatrixXd rbf = (YmT.array().square() * lambda).exp();
-    Eigen::MatrixXd rbf = (YmT.array().pow(pValue) * lambda).exp();
+    Eigen::MatrixXd rbf = (YmT.array().abs().pow(pValue) * lambda).exp();
 
     auto err = beta * (1 - rbf.array());
     return err;
@@ -394,8 +394,11 @@ Eigen::MatrixXd ClossNet::clossDerivative(const Eigen::MatrixBase<Derived>& x)
     double lambda = -1 / (2 * kernelSize * kernelSize);
     double beta = 1 / (1 - exp(lambda));
 //    Eigen::MatrixXd rbf = (x.array().square() * lambda).exp();
-    Eigen::MatrixXd rbf = (x.array().pow(pValue) * lambda).exp();
+    Eigen::MatrixXd rbf = (x.array().abs().pow(pValue) * lambda).exp();
 
-    auto d = beta * rbf * (-lambda) * pValue * x.array().pow(pValue -1).matrix();
+    auto sign = [](double x) { return x >= 0 ? 1 : -1; };
+    auto signx = x.unaryExpr(sign);
+
+    auto d = beta * rbf * (-lambda) * pValue * x.array().abs().pow(pValue -1).matrix().cwiseProduct(signx);
     return d;
 }
