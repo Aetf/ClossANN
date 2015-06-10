@@ -103,6 +103,7 @@ void UIHandler::run()
     auto step = [&]() {
         // ensure data is in training mode
         auto ctx = task->data().enterTrainingMode(false);
+        task->network().trainingSet(task->data());
         return opt.step();
     };
 
@@ -117,15 +118,24 @@ void UIHandler::run()
             predictionInRequest = false;
         }
 
-        // compute testing error, ensure in testing mode
-        double testError = 0.0;
-        auto ctx = task->data().enterTestingMode(false);
-        task->network().trainingSet(task->data());
-        if (task->data().samples() > 0) {
-            testError = task->network().error();
+        // compute testing error, testing rate and train rate
+        double testRate = 1.0;
+        double trainRate = 1.0;
+        {
+            auto ctx = task->data().enterTestingMode(false);
+            task->network().trainingSet(task->data());
+            testRate = computeClassificationPossibility();
+        }
+        {
+            auto ctx = task->data().enterTrainingMode(false);
+            task->network().trainingSet(task->data());
+            trainRate = computeClassificationPossibility();
         }
 
-        emit iterationFinished(task, opt.currentIteration(), opt.currentError(), testError);
+        emit iterationFinished(task, opt.currentIteration(),
+                               opt.currentError(),
+                               trainRate,
+                               testRate);
 
         QReadLocker locker(&lockForCancelFlag);
         if(cancelFlag) {
@@ -135,7 +145,7 @@ void UIHandler::run()
     }
     opt.result();
 
-    computeMeanMisclassificationPossibility();
+    computeClassificationPossibility();
 }
 
 void UIHandler::onTrainingFinished()
@@ -238,11 +248,10 @@ void UIHandler::generatePrediction(Learner& learner)
     emit predictionUpdated(prediction);
 }
 
-void UIHandler::computeMeanMisclassificationPossibility()
+double UIHandler::computeClassificationPossibility()
 {
-    auto ctx = task->data().enterTestingMode();
     int correct = task->data().samples();
-    if (!correct) return;
+    if (!correct) return 1.0;
 
     for (int i = 0; i!= task->data().samples(); i++) {
         auto in = task->data().getInstance(i);
@@ -251,9 +260,8 @@ void UIHandler::computeMeanMisclassificationPossibility()
 
         if (!match(out, desired)) --correct;
     }
-    Log::normal() << "在测试集上的误分类率为 "
-                  << (100.0 - correct * 100.0 / task->data().samples())
-                  << "%";
+    double rate = correct * 100.0 / task->data().samples();
+    return rate;
 }
 
 void UIHandler::sendTrainingDataUpdated()

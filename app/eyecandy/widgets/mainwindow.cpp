@@ -454,6 +454,8 @@ void MainWindow::setupErrorLine(QCustomPlot *plot)
     auto wideAxisRect = new QCPAxisRect(plot);
     wideAxisRect->setupFullAxesBox(true);
     wideAxisRect->axis(QCPAxis::atLeft)->setAutoTickCount(4);
+    wideAxisRect->axis(QCPAxis::atLeft)->setRange(-1, 105);
+
     QCPLayoutGrid *subLayout = new QCPLayoutGrid;
     // insert axis rect in first row
     plot->plotLayout()->addElement(0, 0, wideAxisRect);
@@ -465,15 +467,14 @@ void MainWindow::setupErrorLine(QCustomPlot *plot)
     auto subRectRight = new QCPAxisRect(plot, false);
     subLayout->addElement(0, 0, subRectLeft);
     subLayout->addElement(0, 1, subRectRight);
-    // make bottom right axis rect size fixed 150x150
-    subRectRight->setMaximumSize(150, 150);
+    // make bottom left axis rect size fixed 150x150
+    subRectLeft->setMaximumSize(150, 150);
     // setup axes in sub layout axis rects:
     subRectLeft->addAxes(QCPAxis::atBottom | QCPAxis::atLeft);
     subRectRight->addAxes(QCPAxis::atBottom | QCPAxis::atRight);
     subRectLeft->axis(QCPAxis::atLeft)->setAutoTickCount(3);
-    subRectRight->axis(QCPAxis::atRight)->setAutoTickCount(3);
-    subRectRight->axis(QCPAxis::atBottom)->setAutoTickCount(2);
     subRectLeft->axis(QCPAxis::atBottom)->grid()->setVisible(true);
+    subRectRight->axis(QCPAxis::atBottom)->grid()->setVisible(true);
     // synchronize the left and right margins of the top and bottom axis rects:
     auto marginGroup = new QCPMarginGroup(plot);
     subRectLeft->setMarginGroup(QCP::msLeft, marginGroup);
@@ -500,48 +501,45 @@ void MainWindow::setupErrorLine(QCustomPlot *plot)
     auto graphTrain = plot->addGraph(wideAxisRect->axis(QCPAxis::atBottom), wideAxisRect->axis(QCPAxis::atLeft));
     graphTrain->setPen(QPen(QColor(110, 170, 110), 2));
     graphTrain->setBrush(QColor(110, 170, 110, 50));
-    graphTrain->setName("训练");
+    graphTrain->setName("训练集正确率");
     graphTrain->addToLegend();
 
-    auto graphTesting = plot->addGraph(wideAxisRect->axis(QCPAxis::atBottom), wideAxisRect->axis(QCPAxis::atLeft));
+    auto graphTesting = plot->addGraph(wideAxisRect->axis(QCPAxis::atBottom),
+                                       wideAxisRect->axis(QCPAxis::atLeft));
     graphTesting->setPen(QPen(QColor(255, 161, 0)));
     graphTesting->setBrush(QColor(255, 161, 0, 50));
     graphTesting->setChannelFillGraph(graphTrain);
-    graphTesting->setName("测试");
+    graphTesting->setName("测试集正确率");
     graphTesting->addToLegend();
 
-    auto graphSub = plot->addGraph(subRectLeft->axis(QCPAxis::atBottom), subRectLeft->axis(QCPAxis::atLeft));
-    graphSub->setLineStyle(QCPGraph::lsImpulse);
-    graphSub->setPen(QPen(QColor("#FFA100"), 1.5));
+    auto graphTime = plot->addGraph(subRectLeft->axis(QCPAxis::atBottom),
+                                   subRectLeft->axis(QCPAxis::atLeft));
+    graphTime->setLineStyle(QCPGraph::lsImpulse);
+    graphTime->setPen(QPen(QColor("#FFA100"), 1.5));
 
-    auto barTime = new QCPBars(subRectRight->axis(QCPAxis::atBottom), subRectRight->axis(QCPAxis::atRight));
-    plot->addPlottable(barTime);
-    barTime->setPen(QPen(QColor(1, 92, 191)));
-    barTime->setAntialiased(false);
-    barTime->setAntialiasedFill(false);
-    barTime->setBrush(QColor(1, 92, 191, 50));
-    barTime->keyAxis()->setAutoTicks(false);
-    barTime->keyAxis()->setTickVector({1, 2, 3});
-    barTime->keyAxis()->setSubTickCount(0);
+    auto graphError = plot->addGraph(subRectRight->axis(QCPAxis::atBottom),
+                                  subRectRight->axis(QCPAxis::atRight));
+    graphError->setPen(QPen(QColor(1, 92, 191)));
+    graphError->setBrush(QColor(1, 92, 191, 50));
 
     // connect to data signals
     connect(handler.get(), &UIHandler::iterationFinished,
-    this, [=](auto, auto iter, auto error, auto testError) {
+    this, [=](auto, auto iter, auto error, auto trainRate, auto testRate) {
         static double lastIpsTime;
         static int iterCount;
         if (iter == 0) {
             graphTrain->clearData();
             graphTesting->clearData();
-            graphSub->clearData();
-            barTime->clearData();
+            graphTime->clearData();
+            graphError->clearData();
             iterCount = 0;
             lastIpsTime = QDateTime::currentDateTime().toMSecsSinceEpoch();
         }
 
         // timing
         double now = QDateTime::currentDateTime().toMSecsSinceEpoch();
-        barTime->addData(iter, now - lastIterTime);
-        barTime->removeDataBefore(iter - 2);
+        graphTime->addData(iter, now - lastIterTime);
+        graphTime->removeDataBefore(iter - 50);
         lastIterTime = now;
 
         ++iterCount;
@@ -557,18 +555,20 @@ void MainWindow::setupErrorLine(QCustomPlot *plot)
         }
 
         // training error
-        graphTrain->addData(iter, error);
-        graphTesting->addData(iter, testError);
-        graphSub->addData(iter, testError - error);
+        graphTrain->addData(iter, trainRate);
+        graphTesting->addData(iter, testRate);
+        graphError->addData(iter, error);
 
         // rescale axis to fit the current data:
-        plot->rescaleAxes();
+        wideAxisRect->axis(QCPAxis::atBottom)->rescale();
+        subRectLeft->axis(QCPAxis::atLeft)->rescale();
+        subRectLeft->axis(QCPAxis::atBottom)->rescale();
+        subRectRight->axis(QCPAxis::atRight)->rescale();
+        subRectRight->axis(QCPAxis::atBottom)->rescale();
 
         // zoom out a bit
         wideAxisRect->axis(QCPAxis::atBottom)->scaleRange(1.05, 0);
         wideAxisRect->axis(QCPAxis::atBottom)->moveRange(0.25);
-        auto yAxis = wideAxisRect->axis(QCPAxis::atLeft);
-        yAxis->scaleRange(1.1, yAxis->range().center());
 
         plot->replot();
     });
