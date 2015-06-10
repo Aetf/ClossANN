@@ -13,7 +13,6 @@ LearnParam::LearnParam(double learnRate, double kernelSize, double pValue)
     , pValue_(pValue)
     , randSeed_(get_seed())
 {
-    stoppingCriteria_.maximalIterations = 10000;
     layers_ << LayerDesc{LayerDesc::Input, 2, LayerDesc::LINEAR} // Input
             << LayerDesc{LayerDesc::FullyConnected, 20, LayerDesc::TANH}
             << LayerDesc{LayerDesc::FullyConnected, 20, LayerDesc::TANH}

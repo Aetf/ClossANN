@@ -43,7 +43,7 @@ public:
         Closs
     };
 
-    LearnParam(double learningRate = 1, double kernelSize = 0.5, double pValue = 2);
+    LearnParam(double learningRate = 0.01, double kernelSize = 0.5, double pValue = 2);
 
     ErrorFunction errorFunc() const;
     LearnParam& errorFunc(ErrorFunction func);
