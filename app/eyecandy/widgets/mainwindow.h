@@ -40,6 +40,7 @@ protected:
     void setupOptionPage();
     void setupMonitorPage();
     void setupLogPage();
+    void setupFuncPage();
 
     void displayDefaultOptions();
     void applyOptions();

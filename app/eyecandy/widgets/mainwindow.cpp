@@ -15,6 +15,7 @@
 #include <QMetaEnum>
 #include <qcustomplot.h>
 #include <OpenANN/util/Random.h>
+#include <Eigen/Eigen>
 #include "logic/uihandler.h"
 #include "models/layerdescmodel.h"
 #include "models/learntask.h"
@@ -41,6 +42,7 @@ MainWindow::MainWindow(QWidget *parent)
     setupOptionPage();
     setupMonitorPage();
     setupLogPage();
+    setupFuncPage();
 
     if (!disablePredict)
         connect(&predictionTimer, &QTimer::timeout,
@@ -574,6 +576,93 @@ void MainWindow::setupErrorLine(QCustomPlot *plot)
     this, [=]{
         lastIterTime = -1;
     });
+}
+
+void MainWindow::setupFuncPage()
+{
+    auto plot1 = ui->plotFunc1;
+    plot1->legend->setVisible(true);
+    plot1->setAutoAddPlottableToLegend(true);
+    plot1->setInteractions(QCP::iRangeDrag | QCP::iRangeZoom);
+    auto plot2 = ui->plotFunc2;
+    plot2->setInteractions(QCP::iRangeDrag | QCP::iRangeZoom);
+    QCPGraph *graph1[4];
+    for (int i = 0; i!= 4; i++) {
+        graph1[i] = plot1->addGraph();
+    }
+    graph1[0]->setPen(QPen(QColor(0, 255, 0), 2));
+    graph1[0]->setName("closs sigma = 0.5");
+    graph1[1]->setPen(QPen(QColor(255, 0, 0), 2));
+    graph1[1]->setName("closs sigma = 1");
+    graph1[2]->setPen(QPen(QColor(0, 0, 255), 2));
+    graph1[2]->setName("closs sigma = 2");
+    graph1[3]->setPen(QPen(QColor(0, 0, 0), 2));
+    graph1[3]->setName("0-1 loss");
+
+    QCPGraph *graph2[3];
+    for (int i = 0; i!= 3; i++) {
+        graph2[i] = plot2->addGraph();
+        graph2[i]->setPen(QPen(QColor(110, 170, 11 * i), 2));
+        graph2[i]->setBrush(QColor(110, 170, 110, 50));
+    }
+
+    auto closs = [](const auto &YmT, double kernelSize, double pValue) {
+        double lambda = -1 / (2 * kernelSize * kernelSize);
+        double beta = 1 / (1 - exp(lambda));
+        Eigen::MatrixXd rbf = (YmT.array().abs().pow(pValue) * lambda).exp();
+
+        auto err = (beta * (1 - rbf.array())).eval();
+        return err;
+    };
+
+    auto dcloss = [](const auto& x, double kernelSize, double pValue) {
+        double lambda = -1 / (2 * kernelSize * kernelSize);
+        double beta = 1 / (1 - exp(lambda));
+        Eigen::MatrixXd rbf = (x.array().abs().pow(pValue) * lambda).exp().eval();
+
+        auto sign = [](double x) { return x >= 0 ? 1 : -1; };
+        auto signx = x.unaryExpr(sign);
+
+        auto tmp = x.array().abs().pow(pValue-1).matrix().cwiseProduct(signx);
+
+        auto d = (beta * (-lambda) * pValue * rbf * tmp).eval();
+        return d;
+    };
+
+    auto loss01 = [](double x){
+        return x <= 0 ? 1 : 0;
+    };
+
+
+    QVector<double> x, ycloss05, ydcloss, ycloss1, ycloss2, y01loss;
+    double step = 0.01;
+    for (double k = -1; k <= 1; k+=step) {
+        x << k;
+        Eigen::MatrixXd vx(1, 1);
+        vx << (1-k);
+        ycloss05 << closs(vx, 0.5, 2)(0, 0);
+        ycloss1 << closs(vx, 0.5, 1)(0, 0);
+        ycloss2 << closs(vx, 0.5, 5.5)(0, 0);
+        y01loss << loss01(k);
+    }
+    x.clear();
+    for (double k = 0; k <= 2; k+=step) {
+        x << k;
+        Eigen::MatrixXd vx(1, 1);
+        vx << k;
+        ydcloss << dcloss(vx, 0.5, 5.5)(0, 0);
+    }
+
+    graph1[0]->setData(x, ycloss05);
+    graph1[1]->setData(x, ycloss1);
+    graph1[2]->setData(x, ycloss2);
+    graph1[3]->setData(x, y01loss);
+    graph2[0]->setData(x, ydcloss);
+    plot1->axisRect()->setupFullAxesBox();
+    plot2->axisRect()->setupFullAxesBox();
+    plot1->rescaleAxes();
+    plot2->rescaleAxes();
+    plot2->yAxis->setRangeUpper(4);
 }
 
 MainWindow::~MainWindow()
