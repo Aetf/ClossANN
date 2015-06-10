@@ -16,7 +16,7 @@ LogListWidget::LogListWidget(QWidget *parent)
     setSelectionMode(QAbstractItemView::ExtendedSelection);
     // Context menu
     QAction *copyAct = new QAction(AwesomeIconProvider::instance()->icon(fa::copy), tr("复制"), this);
-    QAction *clearAct = new QAction(AwesomeIconProvider::instance()->icon(fa::remove), tr("清楚"), this);
+    QAction *clearAct = new QAction(AwesomeIconProvider::instance()->icon(fa::remove), tr("清除"), this);
     connect(copyAct, SIGNAL(triggered()), SLOT(copySelection()));
     connect(clearAct, SIGNAL(triggered()), SLOT(clearLog()));
     addAction(copyAct);
