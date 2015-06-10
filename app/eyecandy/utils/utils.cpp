@@ -24,7 +24,7 @@ bool match(const Eigen::VectorXd &out, const Eigen::VectorXd &desired)
     if (out.rows() != desired.rows()) return false;
 
     bool ok = true;
-    double gate = (1 - (-1)) / 2.0;
+    double gate = 0.1;
     for (int i = 0; i!= out.rows(); i++) {
         ok = fuzzyCompare(out[i], desired[i], gate);
         if (!ok) break;
