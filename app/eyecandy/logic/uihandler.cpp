@@ -97,6 +97,7 @@ void UIHandler::run()
 
     opt.setOptimizable(task->network());
     opt.setStopCriteria(task->stopCriteria());
+    Log::warning() << "Learning rate not support in LMA!";
 
     // protect multithread access to data
     auto step = [&]() {
@@ -111,8 +112,13 @@ void UIHandler::run()
                     << "Error = "
                     << QStringLiteral("%1").arg(opt.currentError(), 0, 'g', 4);
 
-        double testError = 0.0;
+        if (predictionInRequest) {
+            generatePrediction(task->network());
+            predictionInRequest = false;
+        }
+
         // compute testing error, ensure in testing mode
+        double testError = 0.0;
         auto ctx = task->data().enterTestingMode(false);
         task->network().trainingSet(task->data());
         if (task->data().samples() > 0) {
@@ -207,8 +213,6 @@ QVariantList UIHandler::getTestingSet()
 
 void UIHandler::onIterationFinished()
 {
-    if (predictionInRequest)
-        generatePrediction(task->network());
 }
 
 void UIHandler::generatePrediction(Learner& learner)
