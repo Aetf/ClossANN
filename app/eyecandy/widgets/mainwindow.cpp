@@ -126,7 +126,7 @@ void MainWindow::setupOptionPage()
     connect(ui->btnCSVBrowse, &QAbstractButton::clicked,
     this, [=]() {
         auto path = QFileDialog::getOpenFileName(this, tr("打开CSV数据文件"),
-                    "",
+                    ui->lineCSVFile->text(),
                     tr("CSV 文件(*.csv)"));
         if (!path.isEmpty())
             ui->lineCSVFile->setText(path);
@@ -195,15 +195,17 @@ void MainWindow::setupLogPage()
 
 void MainWindow::setupMonitorPage()
 {
-    if (!disablePredict)
-        setupProblemPlane(ui->plotColorMap);
     setupErrorLine(ui->plotErrorLine);
 }
 
 void MainWindow::applyOptions()
 {
     currentParam.layers(layersModel->layers());
+
+    disablePredict = currentParam.layers().first().nUnit != 2;
     currentParam.disablePredict = disablePredict;
+    if (!disablePredict)
+        setupProblemPlane(ui->plotColorMap);
 
     Log::normal() << "应用参数...";
     handler->configure(currentParam);
