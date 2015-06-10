@@ -5,6 +5,7 @@ Closs:
 3576016773 obvious plane in error line
 528358257 really bad seed
 3089162705 large over-training
+3437868974 average performance
 
 MSE:
 1249537496 obvious overtrained

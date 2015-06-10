@@ -12,6 +12,7 @@
 - [x] Show training and testing data when not training
 - [x] ~~Integer x axis in error line (not possible in QCustomPlot 1.x)~~
 - [x] Abnormal exit when running (handle interupt in runAsync)
+- [ ] Move UIHandler::run to Optimizer class
 - [ ] Save result about each run
 - [ ] Move training run to LearnTask
 - [x] Proper window size
