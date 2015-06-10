@@ -20,7 +20,6 @@ class ClossNet : public OpenANN::Net
 protected:
     double kernelSize;
     double pValue;
-    double learningRate;
 
 public:
     /**
@@ -125,17 +124,6 @@ public:
      * @return this for chaining
      */
     ClossNet& setPValue(double value);
-    /**
-     * Request learning rate for all layers in this neural network.
-     * @return the learn rate
-     */
-    double getLearningRate() const;
-    /**
-     * Set learning rate for all layers in this neural network.
-     * @param learningRate for all layers in this neural network.
-     * @return  this for chaining
-     */
-    ClossNet& setLearningRate(double learningRate);
     ///@}
 
     /**
@@ -153,6 +141,7 @@ public:
 
 protected:
     void backpropagate();
+    void forwardPropagate(double *error);
     Eigen::VectorXd error(std::vector<int>::const_iterator startN,
                           std::vector<int>::const_iterator endN);
 

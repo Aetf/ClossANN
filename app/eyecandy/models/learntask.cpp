@@ -24,7 +24,6 @@ LearnTask::LearnTask(const LearnParam &param)
         // set parameters
         clossNet().setKernelSize(param.kernelSize());
         clossNet().setPValue(param.pValue());
-        clossNet().setLearningRate(param.learningRate());
         break;
     }
 

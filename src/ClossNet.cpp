@@ -35,7 +35,6 @@ void ClossNet::save(std::ostream& stream)
     Net::save(stream);
     stream << "kernelSize " << kernelSize;
     stream << "pValue" << pValue;
-    stream << "learningRate" << learningRate;
 }
 
 void ClossNet::load(std::istream& stream)
@@ -237,12 +236,6 @@ void ClossNet::load(std::istream& stream)
             stream >> p;
             setPValue(p);
         }
-        else if(type == "learningRate")
-        {
-            double l = 0.0;
-            stream >> l;
-            setLearningRate(l);
-        }
         else
         {
             throw OpenANNException("Unknown layer type: '" + type + "'.");
@@ -287,19 +280,6 @@ ClossNet& ClossNet::setPValue(double value)
     return *this;
 }
 
-double ClossNet::getLearningRate() const
-{
-    return learningRate;
-}
-
-ClossNet& ClossNet::setLearningRate(double learningRate)
-{
-    OPENANN_DEBUG << "Warning: learning rate not implemented yet!"
-                  << "Fixed value 1.0 is actually used now.";
-    this->learningRate = learningRate;
-    return *this;
-}
-
 double ClossNet::error(unsigned int n)
 {
     std::vector<int> vec;
@@ -322,6 +302,18 @@ Eigen::VectorXd ClossNet::error(std::vector<int>::const_iterator startN,
     forwardPropagate(nullptr);
     tempError = tempOutput - T;
     return clossFunction(tempError).rowwise().sum();
+}
+
+void ClossNet::forwardPropagate(double *error)
+{
+    Eigen::MatrixXd* y = &tempInput;
+    for(std::vector<Layer*>::iterator layer = layers.begin();
+        layer != layers.end(); ++layer)
+      (**layer).forwardPropagate(y, y, dropout, error);
+    tempOutput = *y;
+    OPENANN_CHECK_EQUALS(y->cols(), infos.back().outputs());
+    if(errorFunction == CE)
+      OpenANN::softmax(tempOutput);
 }
 
 double ClossNet::error()
@@ -394,14 +386,17 @@ Eigen::MatrixXd ClossNet::clossDerivative(const Eigen::MatrixBase<Derived>& x)
     double beta = 1 / (1 - exp(lambda));
     Eigen::MatrixXd rbf = (x.array().abs().pow(pValue) * lambda).exp();
 
-    auto sign = [](double x) { return x >= 0 ? 1 : -1; };
-    auto signx = x.unaryExpr(sign);
+    auto sign = [](double x) {
+        return x >= 0 ? 1 : -1;
+    };
+    auto signx = x.unaryExpr(sign).array().eval();
 
     auto d = beta
-            * rbf
-            * (-lambda)
-            * pValue
-            * x.array().abs().pow(pValue -1).matrix().cwiseProduct(signx);
+             * (-lambda)
+             * pValue
+             * rbf.array()
+             * x.array().abs().pow(pValue -1)
+             * signx;
 
     return d.eval();
 }
