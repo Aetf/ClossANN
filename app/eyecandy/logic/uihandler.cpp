@@ -6,6 +6,7 @@
 #include "models/ucwdataset.h"
 #include "utils/logger.h"
 #include <OpenANN/OpenANN>
+#include <OpenANN/optimization/MBSGD.h>
 #include <OpenANN/io/Logger.h>
 #include <OpenANN/util/Random.h>
 #include <QFuture>
@@ -93,10 +94,19 @@ void UIHandler::run()
     task->network().initialize();
     Log::normal() << "网络初始化完成";
 
-    InterruptableLMA opt;
+//    InterruptableLMA opt;
+    OpenANN::Optimizer *opt;
+    switch (task->parameters().errorFunc()) {
+    case LearnParam::MSE:
+    case LearnParam::Closs:
+        opt = new InterruptableLMA();
+        break;
+        opt = new OpenANN::MBSGD;
+        break;
+    }
 
-    opt.setOptimizable(task->network());
-    opt.setStopCriteria(task->stopCriteria());
+    opt->setOptimizable(task->network());
+    opt->setStopCriteria(task->stopCriteria());
     Log::warning() << "Learning rate not support in LMA!";
 
     // protect multithread access to data
@@ -104,23 +114,20 @@ void UIHandler::run()
         // ensure data is in training mode
         auto ctx = task->data().enterTrainingMode(false);
         task->network().trainingSet(task->data());
-        return opt.step();
+        return opt->step();
     };
 
+    int iter = 0;
     while(step())
     {
-        Log::info() << "第" << opt.currentIteration() << "次迭代，"
-                    << "Error = "
-                    << QStringLiteral("%1").arg(opt.currentError(), 0, 'g', 4);
-
         if (predictionInRequest) {
             generatePrediction(task->network());
             predictionInRequest = false;
         }
 
         // compute testing error, testing rate and train rate
-        double testRate = 1.0;
-        double trainRate = 1.0;
+        double testRate = 0.0;
+        double trainRate = 0.0;
         {
             auto ctx = task->data().enterTestingMode(false);
             task->network().trainingSet(task->data());
@@ -132,8 +139,8 @@ void UIHandler::run()
             trainRate = computeClassificationPossibility();
         }
 
-        emit iterationFinished(task, opt.currentIteration(),
-                               opt.currentError(),
+        emit iterationFinished(task, iter++,
+                               0,
                                trainRate,
                                testRate);
 
@@ -143,9 +150,8 @@ void UIHandler::run()
             break;
         }
     }
-    opt.result();
-
-    computeClassificationPossibility();
+    opt->result();
+    delete opt;
 }
 
 void UIHandler::onTrainingFinished()
@@ -251,16 +257,26 @@ void UIHandler::generatePrediction(Learner& learner)
 double UIHandler::computeClassificationPossibility()
 {
     int correct = task->data().samples();
-    if (!correct) return 1.0;
+    if (!correct) {
+        Log::warning() << "computeClassificationPossibility: "
+                        <<"No samples in dataset";
+        return 0.0;
+    }
 
     for (int i = 0; i!= task->data().samples(); i++) {
         auto in = task->data().getInstance(i);
         auto desired = task->data().getTarget(i);
         auto out = task->network()(in);
 
-        if (!match(out, desired)) --correct;
+        bool m = match(out, desired);
+        /*
+        std::cout << "In(" << in << ") Desired (" << desired
+                  << ") Out (" << out << ") ----- " << (m ? "Match" : "Not Match")
+                  << std::endl;
+        */
+        if (!m) --correct;
     }
-    double rate = correct * 100.0 / task->data().samples();
+    double rate = correct * 100.0 / (double) task->data().samples();
     return rate;
 }
 
