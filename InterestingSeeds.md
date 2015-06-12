@@ -7,6 +7,8 @@ Closs:
 3089162705 large over-training
 3437868974 average performance
 
+3390226732 beautiful (with kernel size = 1, pValue = 2)
+
 MSE:
 1249537496 obvious overtrained
 806214614 good at first then obvious over trained
