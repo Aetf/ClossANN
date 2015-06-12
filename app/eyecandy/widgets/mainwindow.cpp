@@ -414,6 +414,9 @@ void MainWindow::setupTestingGraph(QCustomPlot *plot, range outputRange, int lab
 
 void MainWindow::setupProblemPlane(QCustomPlot *plot)
 {
+    static bool done = false;
+    if (done) return;
+    done = true;
     // configure axis rect:
     plot->setInteractions(QCP::iRangeDrag|QCP::iRangeZoom); // this will also allow rescaling the color scale by dragging/zooming
     plot->axisRect()->setupFullAxesBox(true);
@@ -586,27 +589,49 @@ void MainWindow::setupFuncPage()
     plot1->legend->setVisible(true);
     plot1->setAutoAddPlottableToLegend(true);
     plot1->setInteractions(QCP::iRangeDrag | QCP::iRangeZoom);
+    plot1->xAxis->setLabel(tr("alpha = yf(x)"));
+    plot1->yAxis->setLabel(tr("代价函数"));
     auto plot2 = ui->plotFunc2;
     plot2->setInteractions(QCP::iRangeDrag | QCP::iRangeZoom);
-    QCPGraph *graph1[4];
-    for (int i = 0; i!= 4; i++) {
+    plot2->legend->setVisible(true);
+    plot2->setAutoAddPlottableToLegend(true);
+    plot2->xAxis->setLabel(tr("|e|"));
+    plot2->yAxis->setLabel(tr("泛化Correntropy代价函数的导函数"));
+    QCPGraph *graph1[7];
+    for (int i = 0; i!= 7; i++) {
         graph1[i] = plot1->addGraph();
     }
     graph1[0]->setPen(QPen(QColor(0, 255, 0), 2));
-    graph1[0]->setName("closs sigma = 0.5");
+    graph1[0]->setName("closs p = 0.5");
     graph1[1]->setPen(QPen(QColor(255, 0, 0), 2));
-    graph1[1]->setName("closs sigma = 1");
+    graph1[1]->setName("closs p = 1");
     graph1[2]->setPen(QPen(QColor(0, 0, 255), 2));
-    graph1[2]->setName("closs sigma = 2");
-    graph1[3]->setPen(QPen(QColor(0, 0, 0), 2));
-    graph1[3]->setName("0-1 loss");
+    graph1[2]->setName("closs p = 1.5");
+    graph1[3]->setPen(QPen(QColor(255, 0, 255), 2));
+    graph1[3]->setName("closs p = 2");
+    graph1[4]->setPen(QPen(QColor(0, 255, 255), 2));
+    graph1[4]->setName("closs p = 3");
+    graph1[5]->setPen(QPen(QColor(255, 255, 0), 2));
+    graph1[5]->setName("closs p = 4");
+    graph1[6]->setPen(QPen(QColor(0, 0, 0), 2));
+    graph1[6]->setName("0-1 loss");
 
-    QCPGraph *graph2[3];
-    for (int i = 0; i!= 3; i++) {
+    QCPGraph *graph2[6];
+    for (int i = 3; i!= 6; i++) {
         graph2[i] = plot2->addGraph();
-        graph2[i]->setPen(QPen(QColor(110, 170, 11 * i), 2));
-        graph2[i]->setBrush(QColor(110, 170, 110, 50));
     }
+//    graph2[0]->setPen(QPen(QColor(0, 255, 0), 2));
+//    graph2[0]->setName("p = 0.5");
+//    graph2[1]->setPen(QPen(QColor(255, 0, 0), 2));
+//    graph2[1]->setName("p = 1");
+//    graph2[2]->setPen(QPen(QColor(0, 0, 255), 2));
+//    graph2[2]->setName("p = 1.5");
+    graph2[3]->setPen(QPen(QColor(255, 0, 255), 2));
+    graph2[3]->setName("sigma = 0.5, p = 2");
+    graph2[4]->setPen(QPen(QColor(0, 255, 255), 2));
+    graph2[4]->setName("sigma = 0.4, p = 3");
+    graph2[5]->setPen(QPen(QColor(255, 255, 0), 2));
+    graph2[5]->setName("sigma = 0.3 p = 4");
 
     auto closs = [](const auto &YmT, double kernelSize, double pValue) {
         double lambda = -1 / (2 * kernelSize * kernelSize);
@@ -636,35 +661,54 @@ void MainWindow::setupFuncPage()
     };
 
 
-    QVector<double> x, ycloss05, ydcloss, ycloss1, ycloss2, y01loss;
+    QVector<double> x, ycloss05, ycloss15, ycloss1, ycloss2, ycloss3, ycloss4, y01loss;
+    QVector<double> ydcloss05, ydcloss15, ydcloss1, ydcloss2, ydcloss3, ydcloss4;
     double step = 0.01;
     for (double k = -1; k <= 1; k+=step) {
         x << k;
         Eigen::MatrixXd vx(1, 1);
         vx << (1-k);
-        ycloss05 << closs(vx, 0.5, 2)(0, 0);
+        ycloss05 << closs(vx, 0.5, 0.5)(0, 0);
         ycloss1 << closs(vx, 0.5, 1)(0, 0);
-        ycloss2 << closs(vx, 0.5, 5.5)(0, 0);
+        ycloss15 << closs(vx, 0.5, 1.5)(0, 0);
+        ycloss2 << closs(vx, 0.5, 2)(0, 0);
+        ycloss3 << closs(vx, 0.5, 3)(0, 0);
+        ycloss4 << closs(vx, 0.5, 4)(0, 0);
         y01loss << loss01(k);
     }
+    graph1[0]->setData(x, ycloss05);
+    graph1[1]->setData(x, ycloss1);
+    graph1[2]->setData(x, ycloss15);
+    graph1[3]->setData(x, ycloss2);
+    graph1[4]->setData(x, ycloss3);
+    graph1[5]->setData(x, ycloss4);
+    graph1[6]->setData(x, y01loss);
+
     x.clear();
     for (double k = 0; k <= 2; k+=step) {
         x << k;
         Eigen::MatrixXd vx(1, 1);
         vx << k;
-        ydcloss << dcloss(vx, 0.5, 5.5)(0, 0);
+        ydcloss05 << dcloss(vx, 0.5, 0.5)(0, 0);
+        ydcloss1 << dcloss(vx, 0.5, 1)(0, 0);
+        ydcloss15 << dcloss(vx, 0.5, 1.5)(0, 0);
+        ydcloss2 << dcloss(vx, 0.5, 2)(0, 0);
+        ydcloss3 << dcloss(vx, 0.4, 3)(0, 0);
+        ydcloss4 << dcloss(vx, 0.3, 4)(0, 0);
     }
-
-    graph1[0]->setData(x, ycloss05);
-    graph1[1]->setData(x, ycloss1);
-    graph1[2]->setData(x, ycloss2);
-    graph1[3]->setData(x, y01loss);
-    graph2[0]->setData(x, ydcloss);
+//    graph2[0]->setData(x, ydcloss05);
+//    graph2[1]->setData(x, ydcloss1);
+//    graph2[2]->setData(x, ydcloss15);
+    graph2[3]->setData(x, ydcloss2);
+    graph2[4]->setData(x, ydcloss3);
+    graph2[5]->setData(x, ydcloss4);
     plot1->axisRect()->setupFullAxesBox();
     plot2->axisRect()->setupFullAxesBox();
-    plot1->rescaleAxes();
-    plot2->rescaleAxes();
-    plot2->yAxis->setRangeUpper(4);
+    plot1->xAxis->setRange(-1, 1);
+    plot1->yAxis->rescale();
+    plot1->yAxis->scaleRange(1.1, plot1->yAxis->range().center());
+    plot2->xAxis->setRange(0, 2);
+    plot2->yAxis->setRange(0, 4);
 }
 
 MainWindow::~MainWindow()
