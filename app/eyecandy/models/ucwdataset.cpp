@@ -185,7 +185,7 @@ bool UCWDataSet::generateTwoSpirals(int density, double maxDiameter)
 
 bool UCWDataSet::generateCSV(QString filePath, int nInput, int nOutput)
 {
-    const int MAX_COLUMN = 13;
+    const int MAX_COLUMN = 20;
     if (nInput + nOutput > MAX_COLUMN) {
         Log::critical() << "generateCSV: nInput(" << nInput << ")"
                         << "+ nOutput(" << nOutput << ") "
@@ -215,7 +215,7 @@ bool UCWDataSet::generateCSV(QString filePath, int nInput, int nOutput)
     }
 
     int nTest = data.size() / 2;
-//    int nTest = 0;
+//    int nTest = 5000;
     int nTraining = data.size() - nTest;
     trainingIn.resize(nTraining, nInput);
     trainingOut.resize(nTraining, nOutput);
